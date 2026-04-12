@@ -2,13 +2,11 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mission Sicheres Passwort</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Projekt: Mein digitales Ich</title>
     
-    <!-- Tailwind CSS für das Design -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Import Map, um React und die Icons direkt im Browser zu laden -->
     <script type="importmap">
     {
         "imports": {
@@ -19,1974 +17,763 @@
     }
     </script>
     
-    <!-- Babel Standalone, um den React-JSX-Code im Browser verständlich zu machen -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Space+Grotesk:wght@400;700&display=swap');
-        body { margin: 0; background-color: #020617; } /* slate-950 fallback */
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&family=Fredoka:wght@500;600;700&display=swap');
+        
+        body { margin: 0; background-color: #eef2ff; overscroll-behavior-y: none; }
+        * { font-family: 'Nunito', sans-serif !important; -webkit-tap-highlight-color: transparent; }
+        .font-title { font-family: 'Fredoka', sans-serif !important; }
+
+        .next-level-glow {
+          animation: superPulse 2s infinite ease-in-out;
+          z-index: 10;
+        }
+        @keyframes superPulse {
+          0%, 100% { box-shadow: 0 0 15px rgba(99, 102, 241, 0.4); border-color: rgba(99, 102, 241, 0.6); transform: scale(1); }
+          50% { box-shadow: 0 0 25px rgba(99, 102, 241, 0.7); border-color: rgba(99, 102, 241, 0.9); transform: scale(1.02); }
+        }
+        
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #a5b4fc; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #818cf8; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 antialiased min-h-screen">
-    
+<body class="text-slate-800 antialiased min-h-screen">
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useRef } from 'react';
         import { createRoot } from 'react-dom/client';
         import { 
-          Shield, Lock, Unlock, AlertTriangle, Key, CheckCircle, XCircle, 
-          FileText, Award, User, ArrowUp, ArrowDown, ArrowLeft, Cpu, Search, 
-          Target, Fingerprint, Zap, Dices, MailOpen, UserCheck, Smartphone, 
-          Star, Heart, Link as LinkIcon, Globe, Check, X, ShieldAlert,
-          Users, Rocket, PlayCircle, ArrowRight, Terminal, Info, HelpCircle
+          User, Monitor, Image as ImageIcon, CheckCircle, PlayCircle, Lock, Unlock,
+          Edit3, Shield, Award, Smile, BookOpen, PenTool, Check, 
+          AlertTriangle, MessageSquare, Camera, ThumbsUp, ThumbsDown, 
+          ShieldAlert, Key, ChevronLeft, EyeOff, Fingerprint, FileText, Download,
+          ExternalLink, HelpCircle, Lightbulb
         } from 'lucide-react';
 
-        // --- Hilfskomponenten ---
-        const Highlight = ({ children }) => (
-          <span className="text-cyan-300 font-bold bg-cyan-950 border border-cyan-500/50 px-2 py-1 rounded mx-1">{children}</span>
+        // --- HILFSKOMPONENTEN ---
+        const Highlight = ({ children, color="text-indigo-600 bg-indigo-100" }) => (
+          <strong className={`${color} font-bold px-2 py-0.5 rounded-lg inline-block my-1 shadow-sm`}>{children}</strong>
         );
-
-        const SectionTitle = ({ children, icon: Icon, color = "text-cyan-400", title }) => (
-          <div className="flex items-center gap-4 mb-6 pb-4 border-b border-slate-700/80">
-            {Icon && (
-              <div className={`p-2 rounded-lg bg-slate-900 border border-slate-700 shadow-sm ${color}`}>
-                <Icon size={24} />
-              </div>
-            )}
-            <h3 className={`text-2xl font-bold font-mono uppercase tracking-widest ${color}`}>{title} {children}</h3>
-          </div>
-        );
-
-        // --- Vollständige Übersetzungs-Datenbank ---
-        const translations = {
-          de: {
-            missionsLogin: "Missions-Login", mission: "Mission", securePassword: "Sicheres Passwort", euerAuftrag: "Euer Auftrag",
-            welcome_p1: <>Ihr wisst nun, dass <Highlight>Hacker</Highlight> versuchen, Passwörter zu knacken, um an persönliche Daten zu gelangen.</>,
-            welcome_p2: <>Um euch davor zu schützen, wurdet ihr ausgewählt, eine Ausbildung zum <Highlight>Passwort-Agenten</Highlight> zu durchlaufen.</>,
-            welcome_p3: <>Nutzt diese Chance und lernt, <Highlight>extrem sichere Passwörter</Highlight> zu erstellen!</>,
-            playerCount: "Wie viele Agenten spielen?", onePlayer: "Einzelkämpfer", twoPlayers: "Agenten-Team", startMission: "Mission Starten",
-            decknamen: "Wählt eure Decknamen!", nameHint: "Nutzt lustige Geheimnamen, niemals eure echten!", 
-            decknameSingle: "Wähle deinen Decknamen!", decknameSingleHint: "Nutze einen lustigen Geheimnamen, niemals deinen echten!",
-            agent: "Agent", enterName: "Name eingeben...",
-            hauptmenü: "Aktenordner", akteWählen: "Wählt die als nächstes freigeschaltete Akte aus.", back: "Zurück", next: "Weiter", finish: "Akte schließen",
-            lehrerCode: "Agenten-Zentrale: Code eingeben", infoTitle: "Info", quizTitle: "Sicherheits-Check", check: "Prüfen", akte: "Akte",
-            correct: "KORREKT!", wrong: "FEHLER!", loading: "Wird geladen...", tryAgain: "Neu versuchen", login: "Einloggen",
-            attentionAB: "ACHTUNG! ARBEITSBLATT!", abWait: "Du kannst das Fenster erst schließen, nachdem du die Aufgabe auf dem Arbeitsblatt bearbeitet hast!",
-            
-            l1_title: "Akte #1: Was ist ein Passwort?", l1_infoHead: "Grundlagen",
-            l1_p1: <>Stellt euch vor, euer Haus hat keine <Highlight>Haustür</Highlight>. Jeder könnte einfach hineinspazieren!</>,
-            l1_p2: <>Im Internet sind <Highlight>eure Accounts</Highlight> für Spiele, E-Mails oder Schul-Apps euer Zuhause.</>,
-            l1_p3: <>Ein Passwort ist wie der <Highlight>digitale Schlüssel</Highlight> zu dieser Tür. Nur wer den Schlüssel hat, darf hinein.</>,
-            l1_p4: "Ohne Passwort könnte jeder eure Nachrichten lesen, in eurem Namen Unsinn posten oder eure Spielstände löschen.",
-            l1_q1: "Wofür genau benötigen wir Passwörter? Wählt die wichtigste Antwort:",
-            l1_a1: "Damit das Internet schneller funktioniert.", l1_a2: "Um unsere privaten Daten und Identitäten vor Fremden zu schützen.", l1_a3: "Damit das Tablet keine Viren bekommt.",
-            l1_fbWrong: "FEHLER! Denkt an den digitalen Türsteher.", l1_success: "ZUGRIFF GEWÄHRT! Passwörter sind euer digitaler Türsteher.",
-            
-            l2_title: "Akte #2: Schwache Passwörter", l2_infoHead: "Die Gefahr",
-            l2_p1: <>Viele Menschen sind leider etwas faul, wenn es um Passwörter geht. Sie nutzen oft <Highlight>persönliche Daten</Highlight> oder sehr einfache Standardpasswörter (wie 123456 oder hallo).</>,
-            l2_p2: "Kriminelle nutzen genau das aus! Sie hacken Accounts, indem sie Passwörter ganz einfach erraten.",
-            l2_p3: <>Dabei probieren sie gezielt persönliche Dinge wie <Highlight>eure Hobbys, euren Wohnort oder euer Geburtsjahr</Highlight> aus.</>,
-            l2_task: "Aufgabe:", l2_of: "von", 
-            l2_hackPrompt: "Werdet zum Hacker: Versucht das Passwort zu erraten! ACHTUNG: Klickt ihr falsch, verliert ihr ein Leben. Sind alle 3 Leben weg, müsst ihr die Aufgabe neustarten!", l2_profile: "ZIEL-PROFIL",
-            l2_fbRight: "PASSWORT GEKNACKT! NEUE AUFGABE LÄDT...", l2_fbAlarm: "ALARM! ZU VIELE FEHLER! NEUSTART!", l2_fbLife: "Fehler! Du verlierst ein Leben.", l2_success: "ERFOLGREICH! IHR HABT GESEHEN, WIE EINFACH PASSWÖRTER ERRATEN WERDEN.",
-            l2_ab: "Legt das Tablet aus der Hand und bearbeitet Aufgabe 1 handschriftlich am Arbeitsblatt, bevor ihr weiter macht.",
-            l2_profiles: [
-              { name: "Lukas", info: "Ist 12 Jahre alt und spielt gerne Minecraft.", opts: ["passwort123", "minecraft", "lukas12", "hallo123"], c: "lukas12" },
-              { name: "Max Müller", info: "Liebt Fußball und ist 2011 geboren.", opts: ["geheim", "fussball2011", "max", "Sicher!"], c: "fussball2011" },
-              { name: "Tom Meier", info: "Wohnt in der Baumstraße 5.", opts: ["passwort", "Baumstrasse5", "tomtom", "55555"], c: "Baumstrasse5" },
-              { name: "Anna", info: "Liebt Pferde und reitet gerne.", opts: ["reiten", "pferde", "anna123", "qwertz"], c: "pferde" }
-            ],
-
-            l3_title: "Akte #3: Hacker-Programme", l3_infoHead: "Hacker-Taktiken",
-            l3_p1: <>Hacker raten natürlich nicht immer selbst. Sie nutzen <Highlight>Hacker-Programme</Highlight>, die riesige Listen mit allen echten Wörtern und beliebten Passwörtern gespeichert haben.</>,
-            l3_p2: "Diese Listen werden vom Computer automatisch durchprobiert. Je kürzer und normaler euer Passwort ist, desto schneller ist der Computer fertig.",
-            l3_p3: <>Ein normaler Computer testet so bis zu <Highlight>1 Milliarde Passwörter pro Sekunde!</Highlight></>,
-            l3_p4: <>Daher ist die <Highlight>Länge und ein wilder Zeichen-Mix</Highlight> euer allerwichtigstes Schutzschild.</>,
-            l3_sortTitle: "Aufgabe:", l3_sortSub: "Welches Passwort ist am schwächsten, welches am stärksten? Sortiert von SCHWACH (oben) nach STARK (unten).",
-            l3_weak: "Schwächstes Passwort", l3_strong: "Stärkstes Passwort", l3_time: "Dauer:",
-            l3_fbWrong: "FALSCHE REIHENFOLGE! ROT MARKIERT IST NOCH FALSCH.", l3_fbRight: "KORREKT! JE LÄNGER UND BUNT GEMISCHTER, DESTO SCHWERER ZU HACKEN.",
-            l3_analysisTitle: "Aufgabe:", l3_analysisSub: "Schaut euch das stärkste (M!ss1on_P@ss) und das schwächste (passwort) Passwort an. Kreuzt alle richtigen Aussagen an:",
-            l3_analysisWrong: "DAS STIMMT NOCH NICHT GANZ! ÜBERPRÜFE DEINE EINGABEN.", l3_analysisRight: "ALLES KORREKT ANALYSIERT!",
-            l3_times: { t1: "2 Minuten", t2: "Sofort", t3: "400 Jahre", t4: "1 Sekunde" },
-            l3_opts: [
-              { id: 1, text: '"passwort" ist sicher, weil man es sich gut merken kann.', c: false },
-              { id: 2, text: '"passwort" ist unsicher, weil es ein normales Wort ist.', c: true },
-              { id: 3, text: '"M!ss1on_P@ss" ist extrem sicher, weil es verschiedene Zeichen mischt.', c: true },
-              { id: 4, text: '"Sommer2024" ist das perfekte Passwort, weil Zahlen vorkommen.', c: false },
-              { id: 5, text: 'Je länger und verrückter das Passwort, desto länger braucht der Computer zum Hacken.', c: true }
-            ],
-
-            l4_title: "Akte #4: Sichere Passwörter", l4_infoHead: "Das Rezept",
-            l4_sub: "Aus eurer Analyse in Akte 3 ergeben sich die perfekten Zutaten:",
-            l4_li1: <>Mindestens <Highlight>10 Zeichen</Highlight> lang.</>, l4_li2: <>Mix aus: <Highlight>Groß/Klein, Zahlen, Sonderzeichen</Highlight> (!?#*).</>,
-            l4_li3: <>Keine <Highlight>echten Wörter</Highlight> (wie "Schule" oder "Hund").</>, l4_li4: "Verratet euer Passwort niemals an andere!", l4_li5: "Verwendet für jeden Account ein komplett eigenes Passwort!",
-            l4_check: "Sicherheits-Check", l4_checkPassed: "SYSTEM-CHECK BESTANDEN! IHR HABT DIE PERFEKTEN ZUTATEN ERKANNT!", l4_fbWrong: "FEHLER! PROBIERE ES NOCH EINMAL.",
-            l4_ab: "Legt das Tablet aus der Hand und bearbeitet Aufgabe 2 handschriftlich am Arbeitsblatt, bevor ihr weiter macht.",
-            l4_qs: [
-              { q: "Welches Passwort ist sicherer?", opts: [{t: "Batman2023", c: false}, {t: "xT7!&gj0mQ", c: true}] },
-              { q: "Welche Regel schützt euch am besten, wenn eine App gehackt wird?", opts: [{t: "Für jeden Account ein eigenes Passwort.", c: true}, {t: "Ein sicheres Passwort für alle Benutzen.", c: false}] },
-              { q: "Euer bester Freund fragt nach dem Netflix-Passwort. Was tut ihr?", opts: [{t: "Niemals verraten!", c: true}, {t: "Aufschreiben und geben.", c: false}] },
-              { q: "Welches Passwort ist sicherer gegen Hacker-Programme?", opts: [{t: "Sommerferien", c: false}, {t: "S0mm3rf3r!en", c: true}] },
-              { q: "Wie hacken Hacker-Programme Accounts?", opts: [{t: "Sie testen blitzschnell riesige Listen mit echten Wörtern.", c: true}, {t: "Ein Hacker ruft an und rät das Passwort.", c: false}] }
-            ],
-
-            l5_title: "Akte #5: Passwort-Tricks", l5_trick: "Trick", l5_t1: "Der Merksatz", l5_t2: "Extra-Ersetzungen", l5_t3: "Plattform-Trick", l5_t4: "Zusammenfassung",
-            l5_ex: "Beispiel:", l5_toExercises: "Zum Training", l5_enterPwd: "Eingabe...", l5_testPwd: "Passwort Testen", l5_mastered: "TRAININGSEINHEIT ABGESCHLOSSEN!",
-            l5_append: "KÜRZEL:", l5_append2: "ANHÄNGEN!",
-            l5_sumTitle: "System-Protokoll: Tricks",
-            l5_t1_p1: <>Wie soll man sich <code className="text-cyan-400 font-mono font-bold bg-slate-950 px-2 py-1 rounded">xT7!pL9#mQ</code> merken? Gar nicht!</>,
-            l5_t1_p2: <>Profis nutzen dafür die <Highlight>Merksatzmethode</Highlight>.</>, l5_t1_p3: <>Denkt euch einen Satz aus und nehmt nur die <Highlight>Anfangsbuchstaben</Highlight> und <Highlight>Satzzeichen</Highlight>.</>,
-            l5_t1_ex: '"Ich esse Äpfel!" ➡️ IeÄ!',
-            l5_t2_p1: "Um es Hackern noch schwerer zu machen, streuen wir Zahlen und Sonderzeichen ein.",
-            l5_t2_p2: <>Ersetzt einfach bestimmte Wörter durch <Highlight>Ziffern und Symbole</Highlight>.</>,
-            l5_t2_r1: 'Aus "ein" / "eine" ➡️ 1', l5_t2_r2: 'Aus "zwei" ➡️ 2', l5_t2_r3: 'Aus "für" ➡️ 4 (da engl. "four" ähnlich wie für klingt)', l5_t2_r4: 'Aus "a" / "A" ➡️ @',
-            l5_t3_p1: "Für jeden Account ein eigenes Passwort!", l5_t3_p2: "",
-            l5_t3_p3: "Aber wer kann sich 20 verschiedene Merksätze merken? Niemand!",
-            l5_t3_p4: <>Nutzt immer euren EINEN Basis-Merksatz, aber hängt an das Ende ein <Highlight>Kürzel für die Plattform</Highlight>.</>,
-            l5_t3_ex: "Basis-Passwort IeÄ! bei TikTok: IeÄ!_TT",
-            l5_t4_p1: "Jetzt wird alles kombiniert! Zeigt, dass ihr echte Passwort-Agenten seid.", l5_t4_p2: "Wendet alle 3 Tricks an:",
-            l5_t4_l1: "Anfangsbuchstaben & Satzzeichen", l5_t4_l2: "Ersetzungen (Zahlen, @)", l5_t4_l3: "Plattform-Kürzel am Ende",
-            l5_ab: "Legt das Tablet aus der Hand und bearbeitet Aufgabe 3 handschriftlich am Arbeitsblatt, bevor ihr weiter macht.",
-            l5_fb_read: "Lies noch einmal genau, wie der Trick funktioniert!",
-            l5_fb_all: "Hast du an alle 3 Tricks (Anfangsbuchstaben, Ersetzungen wie 4/@, und das Kürzel am Ende) gedacht?",
-            l5_fb_trick: "Hast du alle Regeln von Trick {0} berücksichtigt?",
-            l5_fb_hint: "Hinweis: {0}",
-            l5_btn_test: "System-Test Starten",
-            l5_btn_proto: "Zum System-Protokoll",
-            l5_tasks: [
-              { trick: 1, name: "Übung 1", s: "Wir lernen heute viel über Passwörter!", c: "WlhvüP!", hint: "Nehmt nur die Anfangsbuchstaben und die Satzzeichen!" },
-              { trick: 1, name: "Übung 2", s: "Mein Lieblingsfach in der Schule ist Sport.", c: "MLidSiS.", hint: "Anfangsbuchstaben und Punkt am Ende!" },
-              { trick: 2, name: "Übung 3", s: "Für mich gibt es heute Pizza!", c: "4mgehP!", hint: "Substituiere 'Für' durch die Ziffer 4!" },
-              { trick: 2, name: "Übung 4", s: "Am Samstag spiele ich am Tablet.", c: "@Ssi@T.", hint: "Ersetze ein 'A' oder 'a' durch ein '@'!" },
-              { trick: 3, name: "Übung 5", s: "Ich liebe Minecraft sehr!", p: "Minecraft", sc: "_MC", c: "IlMs!_MC", hint: "Nutze deinen Merksatz und hänge _MC an!" },
-              { trick: 4, name: "Übung 6", s: "Zwei Hunde bellen laut im Park.", p: "TikTok", sc: "_TT", c: "2HbliP._TT", hint: "Zwei=2, Anfangsbuchstaben, Satzzeichen und Plattform!" },
-              { trick: 4, name: "Endboss", s: "Am Abend spiele ich für zwei Stunden.", p: "Roblox", sc: "_RB", c: "@@si42S._RB", hint: "Denke an alle Tricks: Anfangsbuchstaben, @ statt A, 4 statt für, 2 statt zwei und das Kürzel!" }
-            ],
-
-            l6_title: "Akte #6: Passwortmeister", l6_head: "Erstellt euer Passwort!", l6_sub: "Ihr kennt nun alle Regeln der Agenten-Ausbildung.", topSecret: "TOP SECRET",
-            l6_alert: "GEHEIMHALTUNG AKTIV!", 
-            l6_p1: <>Geht zur Lehrkraft und holt euch euren <Highlight>Top Secret-Umschlag</Highlight>. Das Passwort ist für die Computer in der Schule! In der nächsten Stunde werdet ihr diese Passwörter auf den Schulcomputern einrichten.</>,
-            l6_li1: "Überlegt euch einen Satz, den ihr euch gut merken könnt.",
-            l6_li2: "Wandelt diesen Satz mit den Tricks in ein extrem sicheres Passwort um.",
-            l6_li3: "Schreibt Satz UND Passwort auf den Zettel. Steckt ihn in den Umschlag.",
-            l6_warn: "WICHTIG: Versucht euch das Passwort im Kopf zu merken. Der Umschlag ist nur für den Notfall!",
-
-            l7_title: "Akte #7: PW-Manager", l7_infoHead: "Digitale Tresore",
-            l7_p1: <>Ein digitaler Tresor (App oder Programm), der sich alle eure langen Passwörter merkt. Ihr müsst euch nur noch <Highlight>EIN einziges Master-Passwort</Highlight> merken.</>,
-            l7_adv: "Vorteil:", l7_advT: "Ihr könnt für jede Website ein langes Chaos-Passwort nehmen. Die App tippt es ein.",
-            l7_dis: "Nachteil:", l7_disT: "Vergesst ihr das Master-Passwort, bleibt der Tresor zu!",
-            l7_exam: "Sicherheits-Check", l7_fbWrong: "FEHLER! Ein Manager speichert alles sicher ab, überleg nochmal.", l7_fbRight: "SYSTEM-PRÜFUNG KORREKT!",
-            l7_qs: [
-              { q: "Ein Passwort-Manager ist am besten vergleichbar mit...", opts: [{t: "einem offenen Buch.", c: false}, {t: "einem digitalen Tresor.", c: true}] },
-              { q: "Was ist der größte Nachteil eines Passwort-Managers?", opts: [{t: "Wenn man das Master-Passwort vergisst, sind alle Passwörter weg.", c: true}, {t: "Er braucht zu viel Speicherplatz.", c: false}] },
-              { q: "Was sollte man auf keinen Fall mit dem Master-Passwort tun?", opts: [{t: "Es als Merksatz im Kopf speichern.", c: false}, {t: "Es auf einen Zettel schreiben und an den Bildschirm kleben.", c: true}] }
-            ],
-
-            l8_title: "Akte #8: 2FA", l8_infoHead: "Doppelter Schutz",
-            l8_p1: <>Die Zwei-Faktor-Authentifizierung (2FA) ist wie ein <Highlight>doppelter Türsteher</Highlight>.</>,
-            l8_p2: "Selbst wenn ein Hacker euer Passwort herausfindet, kommt er nicht rein, solange 2FA aktiviert ist.",
-            l8_p3: <>Das System verlangt neben dem Passwort noch einen <Highlight>zweiten Beweis</Highlight>. Gute 2. Faktoren sind: Ein <Highlight>Zahlencode</Highlight> (SMS) oder euer <Highlight>Fingerabdruck</Highlight>.</>,
-            l8_fbWrong: "SYSTEMFEHLER! ÜBERLEGT NOCHMAL.",
-            l8_qs: [
-              { q: "Was könnte ein guter \"zweiter Faktor\" sein?", opts: [{t: "Fingerabdruck oder SMS-Code.", c: true}, {t: "Mein Lieblingsessen.", c: false}] },
-              { q: "Warum macht ein SMS-Code euren Account so viel sicherer?", opts: [{t: "Weil Hacker unser Handy haben müssten.", c: true}, {t: "Weil SMS kostenlos sind.", c: false}] },
-              { q: "Was passiert, wenn ihr das Passwort wisst, aber das Handy verloren habt?", opts: [{t: "Man wartet 5 Minuten.", c: false}, {t: "Man kommt erstmal nicht in den Account.", c: true}] }
-            ],
-
-            l9_title: "Akte #9: Phishing", l9_infoHead: "Gefälschte Nachrichten",
-            l9_p1: <>Hacker verschicken Fake-E-Mails, die wie das Original aussehen. Das nennt man <Highlight>Phishing</Highlight> (Passwörter angeln).</>,
-            l9_p2: "Woran erkennt man sie?",
-            l9_li1: <>1. Die <Highlight>Absender-Adresse</Highlight> ist seltsam (z.B. @n1ntendo.xyz).</>,
-            l9_li2: <>2. Sie machen extrem viel <Highlight>Druck</Highlight> (z.B. 'Account wird gelöscht!').</>,
-            l9_li3: <>3. Sie fordern euch auf, <Highlight>Passwörter einzugeben</Highlight>.</>,
-            l9_task: "Aufgabe:", l9_inbox: "POSTEINGANG", l9_from: "Von:", l9_link: "Link anklicken", l9_btnFake: "PHISHING-GEFAHR!", l9_btnReal: "SICHERE MAIL",
-            l9_fbWrong: "FEHLER! SCANNE ABSENDER UND INHALT!", l9_fbAlarm: "KRITISCHER FEHLER! DATEN GESTOHLEN!", l9_fbLucky: "SCAN ERFOLGREICH! SICHERER LINK.",
-            l9_success: "POSTFACH BEREINIGT! DU BIST EIN PHISHING-PROFI.",
-            l9_emails: [
-              { sender: "support@n1ntendo-hilfe.xyz", subject: "WICHTIG: Account-Sperre!", body: "Wir haben verdächtige Aktivitäten festgestellt. Klickt SOFORT hier und gebt euer Passwort ein, sonst wird euer Account gelöscht!", phishing: true },
-              { sender: "newsletter@minecraft.net", subject: "Update News", body: "Im neusten Update gibt es neue Features. Schaut euch das Video auf YouTube an. Viel Spaß!", phishing: false },
-              { sender: "admin-sicherheit@schul-login.de", subject: "Passwort bestätigen!", body: "Liebe Schüler, bitte klickt auf diesen Link und tippt euer Passwort zur Sicherheit noch einmal ein.", phishing: true }
-            ],
-
-            l10_title: "Akte #10: Hackerangriff", l10_head: "System Defender",
-            l10_p1: "Hacker feuern Passwörter auf unseren Server!",
-            l10_p2: <>Zerstört alle <Highlight>SCHWACHEN</Highlight> Passwörter (Antippen), bevor sie unten ankommen.</>,
-            l10_p3: <>Die <Highlight>STARKEN</Highlight> Passwörter müsst ihr durchlassen!</>,
-            l10_warn: <>ACHTUNG: Tippt ihr ein starkes Passwort an oder lasst ein schwaches durch, verliert ihr ein Leben (<Heart className="inline text-rose-500 fill-current drop-shadow-md" size={24}/>). Bei 0 ist Game Over.<br/><br/>Nach 30 Sekunden startet der Tarnmodus! Alle Passwörter sehen dann gleich aus.</>,
-            l10_single: "SOLO MISSION", l10_coop: "CO-OP MISSION", l10_vs: "VERSUS MISSION", l10_score: "PUNKTE:",
-            l10_camo: "TARNMODUS AKTIV", l10_server: "SERVER-FIREWALL", l10_gameover: "SYSTEM AUSFALL", l10_endstand: "AUSWERTUNG", l10_tie: "UNENTSCHIEDEN!", l10_wins: "GEWINNT!",
-            l10_playAgain: "NEUSTART", l10_changeMode: "MODUS ÄNDERN", l10_swapSides: "SEITEN TAUSCHEN",
-
-            cert_title: "Zertifikat", cert_auth: "Cyber-Security Behörde", cert_conf: "Hiermit wird offiziell bestätigt, dass",
-            cert_text: <>die Agenten-Ausbildung zum <strong className="text-cyan-400 font-bold">Passwort-Profi</strong> bestanden haben. Autorisierung für hochsichere Systeme erteilt.</>,
-            cert_examiner: "System-Admin", cert_date: "Ausstellungsdatum", cert_back: "Zum Hauptterminal", cert_sysadmin: "SYS-ADMIN", cert_unknownAgent: "AGENT UNBEKANNT"
-          },
-          ru: {
-            missionsLogin: "Вход в систему", mission: "Миссия", securePassword: "Надежный пароль", euerAuftrag: "Ваша задача",
-            welcome_p1: <>Теперь вы знаете, что <Highlight>хакеры</Highlight> пытаются взломать пароли, чтобы получить ваши личные данные.</>,
-            welcome_p2: <>Чтобы защитить себя, вы были выбраны для прохождения подготовки <Highlight>Агента по паролям</Highlight>.</>,
-            welcome_p3: <>Используйте этот шанс и научитесь создавать <Highlight>сверхнадежные пароли</Highlight>!</>,
-            playerCount: "Сколько агентов?", onePlayer: "Один агент", twoPlayers: "Отряд агентов", startMission: "Начать миссию",
-            decknamen: "Кодовые имена!", nameHint: "Используйте секретные имена!", 
-            decknameSingle: "Кодовое имя!", decknameSingleHint: "Используй секретное имя!",
-            agent: "Агент", enterName: "Ввод имени...",
-            hauptmenü: "База данных", akteWählen: "Выберите доступное дело.", back: "Назад", next: "Далее", finish: "Закрыть дело",
-            lehrerCode: "Пароль администратора", infoTitle: "Инфо", quizTitle: "Проверка", check: "Анализ", akte: "Дело",
-            correct: "ВЕРНО!", wrong: "ОШИБКА!", loading: "Загрузка...", tryAgain: "Повторить", login: "Доступ",
-            attentionAB: "ВНИМАНИЕ! РАБОЧИЙ ЛИСТ!", abWait: "Сначала выполните задание на листе!",
-            
-            l1_title: "Дело #1: Пароль?", l1_infoHead: "Основы",
-            l1_p1: <>В вашем доме нет <Highlight>входной двери</Highlight>. Любой мог бы войти!</>,
-            l1_p2: <>В сети ваши аккаунты — это <Highlight>ваш дом</Highlight>.</>,
-            l1_p3: <>Пароль — это <Highlight>цифровой ключ</Highlight>. Войти может только тот, у кого он есть.</>,
-            l1_p4: "Без пароля любой мог бы читать ваши сообщения, писать ерунду от вашего имени или удалять ваши сохранения.",
-            l1_q1: "Зачем нам нужны пароли?",
-            l1_a1: "Чтобы интернет работал быстрее.", l1_a2: "Чтобы защитить личные данные от посторонних.", l1_a3: "Для защиты от вирусов.",
-            l1_fbWrong: "ОШИБКА! Вспомните про цифрового стража.", l1_success: "ДОСТУП РАЗРЕШЕН! Пароли — ваш цифровой страж.",
-
-            l2_title: "Дело #2: Слабые пароли", l2_infoHead: "Опасность",
-            l2_p1: <>Люди часто используют <Highlight>личные данные</Highlight> или простые пароли (123456).</>,
-            l2_p2: "Преступники взламывают аккаунты, просто угадывая пароли.",
-            l2_p3: <>Они проверяют <Highlight>хобби, адрес или год рождения</Highlight>.</>,
-            l2_task: "Задание:", l2_of: "/", l2_hackPrompt: "Попытайтесь угадать пароль! ВНИМАНИЕ: Ошибка отнимает жизнь. Если жизней не останется - рестарт!", l2_profile: "ПРОФИЛЬ",
-            l2_fbRight: "ВЗЛОМАНО! ЗАГРУЗКА...", l2_fbAlarm: "ТРЕВОГА! ПЕРЕЗАГРУЗКА СИСТЕМЫ!", l2_fbLife: "Ошибка! Минус жизнь.", l2_success: "УСПЕХ! ВЫ УВИДЕЛИ СЛАБЫЕ МЕСТА.",
-            l2_ab: "Выполните задание 1 на рабочем листе от руки.",
-            l2_profiles: [
-              { name: "Лукас", info: "Ему 12 лет, любит Minecraft.", opts: ["passwort123", "minecraft", "lukas12", "hallo123"], c: "lukas12" },
-              { name: "Макс", info: "Любит футбол, родился в 2011.", opts: ["geheim", "fussball2011", "max", "Sicher!"], c: "fussball2011" },
-              { name: "Том", info: "Живет на Баумштрассе 5.", opts: ["passwort", "Baumstrasse5", "tomtom", "55555"], c: "Baumstrasse5" },
-              { name: "Анна", info: "Любит лошадей.", opts: ["reiten", "pferde", "anna123", "qwertz"], c: "pferde" }
-            ],
-
-            l3_title: "Дело #3: Программы", l3_infoHead: "Тактика хакеров",
-            l3_p1: <>Хакеры используют <Highlight>программы</Highlight> со списками слов и паролей.</>,
-            l3_p2: "Компьютер проверяет их автоматически. Чем короче пароль, тем быстрее взлом.",
-            l3_p3: <>ПК тестирует до <Highlight>1 миллиарда паролей в секунду!</Highlight></>,
-            l3_p4: <><Highlight>Длина и смесь символов</Highlight> — ваш лучший щит.</>,
-            l3_sortTitle: "Задание:", l3_sortSub: "Сортируйте от СЛАБОГО (сверху) до СИЛЬНОГО (снизу).",
-            l3_weak: "Слабый", l3_strong: "Сильный", l3_time: "Время:",
-            l3_fbWrong: "СБОЙ! КРАСНЫЕ ПАРОЛИ НЕ НА МЕСТЕ.", l3_fbRight: "ВЕРНО! ЧЕМ ДЛИННЕЕ И СЛОЖНЕЕ ПАРОЛЬ, ТЕМ ТРУДНЕЕ ЕГО ВЗЛОМАТЬ.",
-            l3_analysisTitle: "Задание:", l3_analysisSub: "Сравните M!ss1on_P@ss и passwort. Отметьте верное:",
-            l3_analysisWrong: "ДАННЫЕ НЕВЕРНЫ! ПРОВЕРЬТЕ ОТВЕТЫ.", l3_analysisRight: "АНАЛИЗ ЗАВЕРШЕН!",
-            l3_times: { t1: "2 Минуты", t2: "Мгновенно", t3: "400 Лет", t4: "1 Секунда" },
-            l3_opts: [
-              { id: 1, text: '"passwort" надежен, так как его легко запомнить.', c: false },
-              { id: 2, text: '"passwort" ненадежен, это обычное слово.', c: true },
-              { id: 3, text: '"M!ss1on_P@ss" надежен из-за смеси символов.', c: true },
-              { id: 4, text: '"Лето2024" идеален, там есть цифры.', c: false },
-              { id: 5, text: 'Длина и спецсимволы замедляют программы хакеров.', c: true }
-            ],
-
-            l4_title: "Дело #4: Надежные пароли", l4_infoHead: "Рецепт",
-            l4_sub: "Правила защиты систем:",
-            l4_li1: <>Длина от <Highlight>10 символов</Highlight>.</>, l4_li2: <>Смесь: <Highlight>Буквы, цифры, символы</Highlight> (!?#*).</>,
-            l4_li3: <>Без <Highlight>настоящих слов</Highlight>.</>, l4_li4: "Никому не говорите свой пароль!", l4_li5: "Для каждого аккаунта — свой пароль!",
-            l4_check: "Тест системы", l4_checkPassed: "ТЕСТ ПРОЙДЕН! ПРАВИЛА УСВОЕНЫ!", l4_fbWrong: "СБОЙ! ПОВТОРИТЕ ПОПЫТКУ.",
-            l4_ab: "Выполните задание 2 на рабочем листе от руки.",
-            l4_qs: [
-              { q: "Какой пароль надежнее?", opts: [{t: "Бэтмен2023", c: false}, {t: "xT7!&gj0mQ", c: true}] },
-              { q: "Что спасет, если базу приложения взломают?", opts: [{t: "Для каждого аккаунта свой пароль.", c: true}, {t: "Один сложный пароль для всего.", c: false}] },
-              { q: "Друг просит пароль от Netflix. Ваши действия?", opts: [{t: "Отказать!", c: true}, {t: "Записать и отдать.", c: false}] },
-              { q: "Что надежнее против хакерских программ?", opts: [{t: "Летниеканикулы", c: false}, {t: "Л3тн!еК@н!кулы", c: true}] },
-              { q: "Как работают хакерские программы?", opts: [{t: "Быстро перебирают списки слов.", c: true}, {t: "Звонят и угадывают по телефону.", c: false}] }
-            ],
-
-            l5_title: "Дело #5: Трюки агентов", l5_trick: "Трюк", l5_t1: "Фраза", l5_t2: "Замены", l5_t3: "Платформа", l5_t4: "Резюме",
-            l5_ex: "Пример:", l5_toExercises: "К тренировке", l5_enterPwd: "Ввод...", l5_testPwd: "Тест Пароля", l5_mastered: "ТРЕНИРОВКА ЗАВЕРШЕНА!",
-            l5_append: "ДОБАВИТЬ:", l5_append2: "В КОНЕЦ!",
-            l5_sumTitle: "Архив трюков",
-            l5_t1_p1: <>Как запомнить <code className="text-cyan-400 font-mono font-bold bg-slate-950 px-2 py-1 rounded">xT7!pL9#mQ</code>? Никак!</>,
-            l5_t1_p2: <>Профи используют <Highlight>метод фразы</Highlight>.</>, l5_t1_p3: <>Возьмите только <Highlight>первые буквы</Highlight> и <Highlight>знаки препинания</Highlight> предложения.</>,
-            l5_t1_ex: '"Я ем яблоки!" ➡️ Яея!',
-            l5_t2_p1: "Добавляем цифры и спецсимволы.",
-            l5_t2_p2: <>Замените слова <Highlight>цифрами и символами</Highlight>.</>,
-            l5_t2_r1: 'Из "один" ➡️ 1', l5_t2_r2: 'Из "два" ➡️ 2', l5_t2_r3: 'Из "для" ➡️ 4', l5_t2_r4: 'Из буквы "а" ➡️ @',
-            l5_t3_p1: "Для каждого аккаунта свой пароль!", l5_t3_p2: "", l5_t3_p3: "Но как запомнить 20 фраз?",
-            l5_t3_p4: <>Используйте ОДНУ фразу, но добавляйте в конец <Highlight>код платформы</Highlight>.</>,
-            l5_t3_ex: "Фраза Яея! для TikTok: Яея!_TT",
-            l5_t4_p1: "Объединяем навыки!", l5_t4_p2: "Примените все 3 трюка:",
-            l5_t4_l1: "Первые буквы и знаки препинания", l5_t4_l2: "Замены (цифры, @)", l5_t4_l3: "Код платформы в конце",
-            l5_ab: "Выполните задание 3 на рабочем листе от руки.",
-            l5_fb_read: "Внимательно прочитайте, как работает трюк!",
-            l5_fb_all: "Вспомни все 3 правила: первые буквы, замены (4/@) и платформа!",
-            l5_fb_trick: "Вы учли все правила трюка {0}?",
-            l5_fb_hint: "Подсказка: {0}",
-            l5_btn_test: "Запуск Теста",
-            l5_btn_proto: "К Протоколу Системы",
-            l5_tasks: [
-              { trick: 1, name: "Упражнение 1", s: "Сегодня мы много узнаем о паролях!", c: "СммУоП!", hint: "Только первые буквы и знаки препинания!" },
-              { trick: 1, name: "Упражнение 2", s: "Мой любимый предмет в школе это спорт.", c: "МлПвШэС.", hint: "Первые буквы и точка в конце!" },
-              { trick: 2, name: "Упражнение 3", s: "Для меня сегодня есть пицца!", c: "4мсеП!", hint: "Замените 'Для' на цифру 4!" },
-              { trick: 2, name: "Упражнение 4", s: "А завтра я играю на планшете.", c: "@зяиНП.", hint: "Замените 'А' или 'а' на '@'!" },
-              { trick: 3, name: "Упражнение 5", s: "Я очень люблю Майнкрафт!", p: "Minecraft", sc: "_MC", c: "ЯоЛМ!_MC", hint: "Фраза и _MC в конец!" },
-              { trick: 4, name: "Тест", s: "Два кота громко мяукают в парке.", p: "TikTok", sc: "_TT", c: "2кГмВП._TT", hint: "Два=2, буквы, знаки препинания и платформа!" },
-              { trick: 4, name: "Финал", s: "А вечером я играю для двух часов.", p: "Roblox", sc: "_RB", c: "@вЯи42Ч._RB", hint: "Вспомни все правила! @, 4, 2 и платформа в конце!" }
-            ],
-
-            l6_title: "Дело #6: Мастер", l6_head: "Создайте пароль!", l6_sub: "Примените знания агента.", topSecret: "СОВЕРШЕННО СЕКРЕТНО",
-            l6_alert: "РЕЖИМ СЕКРЕТНОСТИ!", 
-            l6_p1: <>Возьмите у учителя <Highlight>Секретный конверт</Highlight>. Пароль нужен для школьных ПК! На следующем уроке вы настроите эти пароли на школьных компьютерах.</>,
-            l6_li1: "Придумайте легкое для запоминания предложение.",
-            l6_li2: "С помощью трех трюков преобразуйте его в надежный пароль.",
-            l6_li3: "Напишите предложение И пароль на листке. Спрячьте в конверт.",
-            l6_warn: "ВАЖНО: Постарайтесь запомнить пароль. Конверт только для экстренных случаев!",
-
-            l7_title: "Дело #7: Менеджер", l7_infoHead: "Цифровые сейфы",
-            l7_p1: <>Цифровой сейф, который помнит пароли за вас. Нужен только <Highlight>ОДИН мастер-пароль</Highlight>.</>,
-            l7_adv: "Плюс:", l7_advT: "Можно использовать безумно длинные пароли для сайтов.",
-            l7_dis: "Минус:", l7_disT: "Забудете мастер-пароль — сейф закрыт навсегда!",
-            l7_exam: "Тест Системы", l7_fbWrong: "СБОЙ! Это же сейф, подумайте.", l7_fbRight: "АНАЛИЗ ВЕРЕН!",
-            l7_qs: [
-              { q: "Менеджер паролей — это...", opts: [{t: "открытая книга.", c: false}, {t: "цифровой сейф.", c: true}] },
-              { q: "Главный недостаток?", opts: [{t: "Забыли мастер-пароль — всё пропало.", c: true}, {t: "Занимает много памяти.", c: false}] },
-              { q: "Чего нельзя делать с мастер-паролем?", opts: [{t: "Держать в голове.", c: false}, {t: "Записать на листок и приклеить к экрану.", c: true}] }
-            ],
-
-            l8_title: "Дело #8: 2FA", l8_infoHead: "Двойная защита",
-            l8_p1: <>Двухфакторная аутентификация (2FA) — это <Highlight>двойной страж</Highlight>.</>,
-            l8_p2: "Хакер с паролем не войдет, пока включена 2FA.",
-            l8_p3: <>Система требует <Highlight>второе доказательство</Highlight>. Например: <Highlight>Код из СМС</Highlight> или <Highlight>отпечаток пальца</Highlight>.</>,
-            l8_fbWrong: "ОШИБКА ДАННЫХ!",
-            l8_qs: [
-              { q: "Хороший \"второй фактор\"?", opts: [{t: "Отпечаток пальца или СМС.", c: true}, {t: "Любимая еда.", c: false}] },
-              { q: "Почему СМС делает аккаунт безопаснее?", opts: [{t: "Хакеру нужен ваш телефон.", c: true}, {t: "СМС бесплатны.", c: false}] },
-              { q: "Если есть пароль, но телефон потерян?", opts: [{t: "Нужно подождать 5 минут.", c: false}, {t: "Вы не сможете войти.", c: true}] }
-            ],
-
-            l9_title: "Дело #9: Фишинг", l9_infoHead: "Поддельные письма",
-            l9_p1: <>Хакеры рассылают поддельные письма. Это <Highlight>Фишинг</Highlight> (кража паролей).</>,
-            l9_p2: "Признаки подделки:",
-            l9_li1: <>1. Странный <Highlight>адрес отправителя</Highlight> (@n1ntendo.xyz).</>,
-            l9_li2: <>2. Сильное <Highlight>давление</Highlight> ('Аккаунт будет удален!').</>,
-            l9_li3: <>3. Просьба <Highlight>ввести пароль</Highlight>.</>,
-            l9_task: "Задание:", l9_inbox: "ВХОДЯЩИЕ", l9_from: "От:", l9_link: "Кликнуть ссылку", l9_btnFake: "ФИШИНГ!", l9_btnReal: "БЕЗОПАСНО",
-            l9_fbWrong: "СБОЙ! ПРОВЕРЬ АДРЕС И ДАВЛЕНИЕ!", l9_fbAlarm: "УГРОЗА! ДАННЫЕ УКРАДЕНЫ!", l9_fbLucky: "ОТМЕНА. ССЫЛКА БЕЗОПАСНА.",
-            l9_success: "УГРОЗЫ УСТРАНЕНЫ!",
-            l9_emails: [
-              { sender: "support@n1ntendo-hilfe.xyz", subject: "ВАЖНО: Блокировка!", body: "Подозрительная активность. СРОЧНО введите пароль, иначе аккаунт будет удален!", phishing: true },
-              { sender: "newsletter@minecraft.net", subject: "Новое обновление!", body: "Крутые функции уже здесь. Смотрите видео на YouTube.", phishing: false },
-              { sender: "admin-sicherheit@schul-login.de", subject: "Подтвердите пароль!", body: "Ученики, перейдите по ссылке и введите пароль еще раз для безопасности.", phishing: true }
-            ],
-
-            l10_title: "Дело #10: Атака", l10_head: "Система Защиты",
-            l10_p1: "Хакеры атакуют наш сервер паролями!",
-            l10_p2: <>Уничтожайте все <Highlight>СЛАБЫЕ</Highlight> пароли (нажатием), пока они не достигли низа.</>,
-            l10_p3: <><Highlight>СИЛЬНЫЕ</Highlight> пароли нужно пропускать!</>,
-            l10_warn: <>ВНИМАНИЕ: Если вы нажмете на сильный пароль или пропустите слабый, вы потеряете жизнь (<Heart className="inline text-rose-500 fill-current drop-shadow-md" size={24}/>). При 0 — конец игры.<br/><br/>Через 30 секунд включится режим маскировки! Все пароли будут выглядеть одинаково.</>,
-            l10_single: "СОЛО", l10_coop: "КООПЕРАТИВ", l10_vs: "ДУЭЛЬ", l10_score: "СЧЕТ:",
-            l10_camo: "МАСКИРОВКА АКТИВНА", l10_server: "СЕРВЕР БЕЗОПАСНОСТИ", l10_gameover: "СБОЙ СИСТЕМЫ", l10_endstand: "РЕЗУЛЬТАТ", l10_tie: "НИЧЬЯ!", l10_wins: "ПОБЕДА!",
-            l10_playAgain: "ПЕРЕЗАПУСК", l10_changeMode: "СМЕНИТЬ РЕЖИМ", l10_swapSides: "ПОМЕНЯТЬ МЕСТАМИ",
-
-            cert_title: "Сертификат", cert_auth: "Кибер-Командование", cert_conf: "Официально подтверждается, что",
-            cert_text: <>агенты прошли подготовку <strong className="text-cyan-400 font-bold">Мастера Паролей</strong>. Доступ к защищенным системам разрешен.</>,
-            cert_examiner: "Системный Админ", cert_date: "Дата", cert_back: "В Главное Меню", cert_sysadmin: "СИС-АДМИН", cert_unknownAgent: "НЕИЗВЕСТНЫЙ АГЕНТ"
-          }
-        };
-
-        const FUNNY_NAMES_LIST_DE = ["Laser-Panda", "Cyber-Keks", "Schatten-Fuchs", "Agent Gummibär", "Krypto-Koala", "Neon-Drache", "Pixel-Pirat", "Schnitzel-Spion", "Turbo-Kröte", "WLAN-Ninja", "Glitzer-Hack", "Daten-Dachs"];
-        const FUNNY_NAMES_LIST_RU = ["Лазер-Панда", "Кибер-Кекс", "Теневой-Лис", "Агент Мармелад", "Крипто-Коала", "Неон-Дракон", "Пиксель-Пират", "Шпион-Шницель", "Турбо-Жаба", "Wi-Fi-Ниндзя", "Глиттер-Хак", "Дата-Барсук"];
-
-        // --- UI-Basis-Komponenten ---
-        const Background = () => (
-          <div className="fixed inset-0 z-0 bg-slate-950 overflow-hidden pointer-events-none">
-            <div className="absolute inset-0 opacity-40" style={{ backgroundImage: 'linear-gradient(rgba(6, 182, 212, 0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, 0.15) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
-            <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] bg-cyan-600/15 rounded-full blur-[120px]"></div>
-            <div className="absolute bottom-[-20%] right-[-10%] w-[70vw] h-[70vw] bg-emerald-600/15 rounded-full blur-[120px]"></div>
-          </div>
-        );
-
-        const GameBox = ({ children, className = "", color = "bg-slate-900/95" }) => (
-          <div className={`${color} border border-cyan-500/50 backdrop-blur-xl rounded-2xl shadow-2xl relative overflow-hidden transition-all ${className}`}>
-            {children}
-          </div>
-        );
-
-        const TeacherModal = ({ isOpen, onClose, t, onApplyCode }) => {
-          const [code, setCode] = useState('');
-          if (!isOpen) return null;
-
-          return (
-            <div className="fixed inset-0 z-[500] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm">
-              <div className="w-full max-w-md bg-slate-900 border-2 border-amber-500 p-8 rounded-2xl shadow-2xl">
-                <h3 className="text-amber-400 font-bold font-mono text-2xl uppercase mb-8 flex items-center gap-4">
-                  <Terminal size={28} className="animate-pulse" /> {t('lehrerCode')}
-                </h3>
-                <input 
-                  type="password"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  className="w-full p-4 bg-slate-950 border border-slate-700 rounded-xl text-lg font-bold font-mono text-amber-400 outline-none mb-8 focus:border-amber-500 transition-colors"
-                  placeholder="••••••"
-                  autoFocus
-                />
-                <div className="flex gap-4">
-                  <button 
-                    onClick={() => { onApplyCode(code); setCode(''); onClose(); }}
-                    className="flex-1 py-4 bg-amber-500 border border-amber-400 rounded-xl font-bold text-slate-950 active:scale-95 text-lg transition-all uppercase"
-                  >
-                    OK
-                  </button>
-                  <button 
-                    onClick={onClose}
-                    className="flex-1 py-4 bg-slate-800 border border-slate-600 rounded-xl font-bold text-white active:scale-95 text-lg transition-all uppercase"
-                  >
-                    X
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        };
-
-        const WorksheetModal = ({ isOpen, onClose, children, t }) => {
-          const [timeLeft, setTimeLeft] = useState(15);
-          const [warning, setWarning] = useState(false);
-
-          useEffect(() => {
-            if (!isOpen) { setTimeLeft(15); setWarning(false); return; }
-            const timer = setInterval(() => {
-              setTimeLeft(prev => (prev > 0 ? prev - 1 : 0));
-            }, 1000);
-            return () => clearInterval(timer);
-          }, [isOpen]);
-
-          if (!isOpen) return null;
-
-          const handleClose = () => {
-            if (timeLeft > 0) {
-              setWarning(true);
-              setTimeout(() => setWarning(false), 4000);
-            } else {
-              onClose();
-            }
-          };
-
-          return (
-            <div className="fixed inset-0 z-[600] flex flex-col items-center justify-end p-4 md:p-8 bg-slate-950/25 pointer-events-auto">
-              <div className="w-full max-w-2xl bg-slate-900/95 border-2 border-rose-500 p-6 md:p-8 rounded-2xl shadow-[0_0_40px_rgba(244,63,94,0.3)] relative mb-4">
-                <button onClick={handleClose} className="absolute top-4 right-4 bg-slate-800 text-rose-500 border border-rose-500/50 w-12 h-12 rounded-xl font-bold text-2xl active:scale-90 flex items-center justify-center transition-transform touch-manipulation">
-                  X
-                </button>
-                <div className="flex items-center gap-4 mb-6 pb-4 border-b border-slate-800 pr-12">
-                  <div className="text-rose-500">
-                    <FileText size={32} />
-                  </div>
-                  <h3 className="text-rose-500 font-bold font-mono text-2xl uppercase tracking-widest leading-snug break-words">{t('attentionAB')}</h3>
-                </div>
-                <div className="text-slate-100 font-normal text-lg leading-relaxed mb-6">
-                  {children}
-                </div>
-                {warning && (
-                  <div className="bg-amber-950/80 border border-amber-500 text-amber-400 p-4 rounded-xl font-bold text-lg uppercase text-center shadow-md">
-                    {t('abWait')}
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        };
-
-        const ScreenWrapper = ({ children, title, onBack, agentNames, t, onLangToggle, lang, view, onTeacherCode, modal }) => {
-          const [isTeacherModalOpen, setIsTeacherModalOpen] = useState(false);
-          const displayTitle = view === 'welcome' ? t('missionsLogin') : title;
-
-          useEffect(() => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }, [view, title]);
-
-          return (
-            <div className="min-h-screen text-slate-100 p-6 flex flex-col items-center pb-24 relative overflow-x-hidden">
-              <Background />
-              <TeacherModal 
-                isOpen={isTeacherModalOpen} 
-                onClose={() => setIsTeacherModalOpen(false)} 
-                t={t} 
-                onApplyCode={onTeacherCode}
-              />
-              {modal}
-              
-              <div className="w-full max-w-5xl relative z-10 flex flex-col gap-8">
-                {/* Header Bar */}
-                <div className="flex flex-col md:flex-row gap-6 items-center justify-between border-b border-cyan-500/30 pb-6">
-                  <div className="flex items-center gap-4">
-                    {onBack && (
-                      <button onClick={onBack} className="bg-slate-900 border border-cyan-500/50 p-4 rounded-xl active:scale-95 transition-all touch-manipulation shadow-md">
-                        <ArrowLeft size={28} className="text-cyan-400" />
-                      </button>
-                    )}
-                    <div 
-                      className="bg-slate-900 border border-emerald-500/50 p-4 rounded-xl cursor-pointer active:scale-95 transition-all shadow-md touch-manipulation hover:bg-emerald-950/50"
-                      onClick={() => setIsTeacherModalOpen(true)}
-                    >
-                      <Shield size={28} className="text-emerald-400" />
-                    </div>
-                    <div className="flex flex-col">
-                      <h1 className="text-2xl font-bold font-mono text-white uppercase tracking-widest break-words">{displayTitle}</h1>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    {agentNames && agentNames.length > 0 && (
-                      <div className="flex gap-4">
-                        {agentNames.map((name, i) => name && (
-                          <div key={i} className={`px-4 py-3 rounded-xl border shadow-md text-lg font-bold flex items-center gap-2 uppercase bg-slate-900 ${i === 0 ? 'border-emerald-500/70 text-emerald-400' : 'border-cyan-500/70 text-cyan-400'}`}>
-                            <User size={20}/> {name}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    
-                    <button 
-                      onClick={onLangToggle}
-                      className="bg-slate-900 border border-indigo-500/50 px-6 py-3 rounded-xl text-indigo-400 font-bold text-lg flex items-center gap-3 transition-all active:scale-95 uppercase touch-manipulation shadow-md hover:bg-indigo-950/50"
-                    >
-                      <Globe size={24} /> {lang === 'de' ? 'RU' : 'DE'}
-                    </button>
-                  </div>
-                </div>
-
-                <GameBox className="p-8 min-h-[60vh] flex flex-col">
-                  {children}
-                </GameBox>
-              </div>
-            </div>
-          );
-        };
 
         const Button = ({ onClick, children, variant = 'primary', disabled = false, className = "", icon: Icon }) => {
           const variants = {
-            primary: "bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white border border-cyan-400",
-            secondary: "bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 text-cyan-400 border border-cyan-500/50",
-            success: "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border border-emerald-400",
-            danger: "bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white border border-rose-400",
+            primary: "bg-indigo-500 text-white border-indigo-600 hover:bg-indigo-600 shadow-indigo-200",
+            secondary: "bg-white text-indigo-600 border-indigo-200 hover:bg-indigo-50 shadow-slate-200",
+            success: "bg-emerald-500 text-white border-emerald-600 hover:bg-emerald-600 shadow-emerald-200",
+            danger: "bg-rose-500 text-white border-rose-600 hover:bg-rose-600 shadow-rose-200",
+            amber: "bg-amber-400 text-amber-900 border-amber-500 hover:bg-amber-500 shadow-amber-200",
+            sky: "bg-sky-500 text-white border-sky-600 hover:bg-sky-600 shadow-sky-200"
           };
-          
           return (
-            <button 
-              onClick={onClick} 
-              disabled={disabled} 
-              className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-3 uppercase tracking-widest active:scale-95 disabled:opacity-50 touch-manipulation break-words shadow-lg ${variants[variant]} ${className}`}
-            >
-              {Icon && <Icon size={24} />}
-              {children}
+            <button onClick={onClick} disabled={disabled} className={`w-full py-4 px-6 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 active:scale-95 disabled:opacity-60 disabled:scale-100 shadow-[0_4px_0_0] focus:outline-none transition-all ${variants[variant].split(' ')[0]} ${variants[variant].split(' ')[1]} border-b-4 ${variants[variant].split(' ')[2]} ${variants[variant].split(' ')[3]} shadow-sm ${className}`}>
+              {Icon && <Icon size={24} />} {children}
             </button>
           );
         };
 
-        const InfoCard = ({ children, title, t }) => (
-          <div className="bg-slate-900/95 p-8 rounded-2xl border border-cyan-500/50 mb-8 text-slate-100 font-normal relative shadow-[0_0_20px_rgba(6,182,212,0.1)]">
-            <div className="absolute top-0 right-6 bg-cyan-950 text-cyan-400 font-bold font-mono px-4 py-1 rounded-b-lg border-x border-b border-cyan-500/50 text-lg uppercase tracking-widest shadow-md flex items-center gap-2">
-              {t('infoTitle')} <Info size={20} />
-            </div>
-            <h3 className="text-cyan-400 font-bold font-mono mb-6 uppercase tracking-widest text-2xl border-b border-cyan-500/30 pb-4 mt-2">
-              {title}
-            </h3>
-            <div className="relative z-10 text-lg leading-relaxed">{children}</div>
+        const Background = () => (
+          <div className="fixed inset-0 z-0 bg-indigo-50/50 overflow-hidden pointer-events-none">
+            <div className="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-violet-200/40 rounded-full blur-[120px]"></div>
+            <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-indigo-200/40 rounded-full blur-[100px]"></div>
+            <div className="absolute top-[40%] right-[10%] w-[30vw] h-[30vw] bg-fuchsia-100/40 rounded-full blur-[80px]"></div>
           </div>
         );
 
-        // --- Screen Komponenten ---
-
-        const SetupScreen = ({ onStart, t, onLangToggle, lang, onTeacherCode }) => {
-          const [step, setStep] = useState(1);
-          const [mode, setMode] = useState(1);
-          const [names, setNames] = useState(["", ""]);
-
-          if (step === 1) {
+        const Box = ({ children, title, icon: Icon, color="indigo" }) => {
+            const colors = {
+                indigo: "border-indigo-200 bg-white text-indigo-800 shadow-indigo-100",
+                emerald: "border-emerald-200 bg-white text-emerald-800 shadow-emerald-100",
+                amber: "border-amber-200 bg-white text-amber-900 shadow-amber-100",
+                rose: "border-rose-200 bg-white text-rose-800 shadow-rose-100",
+                sky: "border-sky-200 bg-white text-sky-800 shadow-sky-100",
+            };
             return (
-              <ScreenWrapper view="welcome" t={t} lang={lang} onLangToggle={onLangToggle} onTeacherCode={onTeacherCode}>
-                <div className="flex flex-col items-center text-center space-y-10 py-6">
-                  <div className="bg-gradient-to-br from-cyan-900 to-slate-900 p-10 rounded-full border border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.3)] animate-pulse">
-                    <Key size={56} className="text-cyan-400" />
-                  </div>
-
-                  <div className="space-y-4">
-                    <h1 className="text-2xl font-bold font-mono text-white uppercase tracking-widest leading-snug break-words">
-                      {t('mission')}<br/>
-                      <span className="text-cyan-400 drop-shadow-md">{t('securePassword')}</span>
-                    </h1>
-                  </div>
-
-                  <GameBox color="bg-gradient-to-br from-slate-900 to-slate-950" className="p-8 max-w-4xl border-emerald-500/50 w-full">
-                    <div className="flex items-center gap-4 mb-6 border-b border-emerald-500/30 pb-4">
-                      <div className="text-emerald-400"><UserCheck size={28} /></div>
-                      <h2 className="text-2xl font-bold font-mono text-emerald-400 uppercase tracking-widest">{t('euerAuftrag')}</h2>
+                <div className={`p-6 sm:p-8 rounded-3xl border-2 ${colors[color].split(' ')[0]} ${colors[color].split(' ')[1]} mb-6 relative shadow-lg ${colors[color].split(' ')[3]} animate-fade-in`}>
+                    {title && (
+                        <div className={`flex items-center gap-4 mb-6 pb-4 border-b-2 border-slate-100 ${colors[color].split(' ')[2]}`}>
+                            {Icon && <div className={`p-3 rounded-2xl ${colors[color].split(' ')[0].replace('border-', 'bg-').replace('200', '100')} text-current`}><Icon size={32} /></div>}
+                            <h3 className="text-2xl sm:text-3xl font-bold font-title text-slate-800 leading-tight">{title}</h3>
+                        </div>
+                    )}
+                    <div className="text-[1.15rem] text-slate-600 leading-relaxed space-y-4">
+                        {children}
                     </div>
-                    <div className="text-lg font-normal leading-relaxed text-slate-200 text-left space-y-4">
-                      <p>{t('welcome_p1')}</p>
-                      <p>{t('welcome_p2')}</p>
-                      <p>{t('welcome_p3')}</p>
-                    </div>
-                  </GameBox>
-
-                  <div className="w-full max-w-4xl space-y-6 pt-6 border-t border-slate-700/80">
-                    <h3 className="text-slate-400 font-bold font-mono uppercase tracking-widest text-2xl">{t('playerCount')}</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <Button onClick={() => { setMode(1); setStep(2); }} variant="secondary" icon={User}>
-                        {t('onePlayer')}
-                      </Button>
-                      <Button onClick={() => { setMode(2); setStep(2); }} variant="success" icon={Users}>
-                        {t('twoPlayers')}
-                      </Button>
-                    </div>
-                  </div>
                 </div>
-              </ScreenWrapper>
             );
-          }
-
-          return (
-            <ScreenWrapper title={mode === 1 ? t('decknameSingle') : t('decknamen')} onBack={() => setStep(1)} t={t} lang={lang} onLangToggle={onLangToggle} onTeacherCode={onTeacherCode}>
-              <div className="max-w-3xl mx-auto w-full space-y-10 py-6">
-                <div className="text-center space-y-6 border-b border-cyan-500/50 pb-8">
-                  <Fingerprint size={56} className="text-cyan-400 mx-auto mb-6" />
-                  <h2 className="text-2xl font-bold font-mono text-cyan-400 uppercase tracking-widest break-words">{mode === 1 ? t('decknameSingle') : t('decknamen')}</h2>
-                  <p className="text-slate-200 font-normal text-lg">{mode === 1 ? t('decknameSingleHint') : t('nameHint')}</p>
-                </div>
-
-                <div className="space-y-6">
-                  {[...Array(mode)].map((_, i) => (
-                    <div key={i} className={`bg-gradient-to-br from-slate-900 to-slate-950 p-8 rounded-2xl border shadow-xl ${i === 0 ? 'border-emerald-500/70 shadow-[0_0_20px_rgba(16,185,129,0.1)]' : 'border-cyan-500/70 shadow-[0_0_20px_rgba(6,182,212,0.1)]'}`}>
-                      <label className={`font-bold font-mono uppercase text-lg tracking-[0.2em] mb-4 block ${i === 0 ? 'text-emerald-400' : 'text-cyan-400'}`}>
-                        {t('agent')} {i + 1}
-                      </label>
-                      <div className="flex gap-4">
-                        <input 
-                          type="text" 
-                          value={names[i]} 
-                          onChange={(e) => { let n = [...names]; n[i] = e.target.value; setNames(n); }}
-                          placeholder={t('enterName')}
-                          className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-6 py-4 text-lg font-bold font-mono text-white outline-none focus:border-amber-500 transition-all placeholder:text-slate-600 min-w-0"
-                        />
-                        <button 
-                          onClick={() => { 
-                            const list = lang === 'de' ? FUNNY_NAMES_LIST_DE : FUNNY_NAMES_LIST_RU;
-                            let n = [...names]; 
-                            n[i] = list[Math.floor(Math.random() * list.length)]; 
-                            setNames(n); 
-                          }} 
-                          className="bg-gradient-to-br from-amber-600 to-amber-500 p-4 rounded-xl border border-amber-400 active:scale-95 text-slate-950 touch-manipulation flex-shrink-0 transition-transform shadow-md"
-                        >
-                          <Dices size={28} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <Button onClick={() => onStart(mode, names)} variant="primary" icon={Rocket} className="mt-8">
-                  {t('startMission')}
-                </Button>
-              </div>
-            </ScreenWrapper>
-          );
         };
 
-        const OverviewScreen = ({ maxUnlocked, onSelectLevel, agentNames, t, lang, onLangToggle, onTeacherCode }) => {
-          const levels = [
-            { id: 1, key: "l1_title", color: "border-cyan-500/70" },
-            { id: 2, key: "l2_title", color: "border-amber-500/70" },
-            { id: 3, key: "l3_title", color: "border-rose-500/70" },
-            { id: 4, key: "l4_title", color: "border-emerald-500/70" },
-            { id: 5, key: "l5_title", color: "border-indigo-500/70" },
-            { id: 6, key: "l6_title", color: "border-fuchsia-500/70" },
-            { id: 7, key: "l7_title", color: "border-cyan-500/70" },
-            { id: 8, key: "l8_title", color: "border-emerald-500/70" },
-            { id: 9, key: "l9_title", color: "border-rose-500/70" },
-            { id: 10, key: "l10_title", color: "border-amber-500/70" } 
-          ];
+        // --- LEHRER LOGIN MODAL ---
+        const TeacherModal = ({ isOpen, onClose, onGlobalUnlock, onSkipCurrent }) => {
+            const [code, setCode] = useState("");
+            if (!isOpen) return null;
 
-          return (
-            <ScreenWrapper title={t('hauptmenü')} agentNames={agentNames} t={t} lang={lang} onLangToggle={onLangToggle} onTeacherCode={onTeacherCode} view="overview">
-              <div className="bg-gradient-to-r from-cyan-900/40 to-blue-900/40 p-6 rounded-2xl border border-cyan-500/50 mb-8 text-center shadow-lg">
-                <p className="font-bold font-mono text-cyan-400 text-lg tracking-widest uppercase break-words">{t('akteWählen')}</p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {levels.map(l => {
-                  const isUnlocked = l.id <= maxUnlocked;
-                  const isNext = l.id === maxUnlocked;
-                  const fullTitle = t(l.key);
-                  const titleParts = fullTitle.split(': ');
-                  const mainTitle = titleParts.length > 1 ? titleParts[1] : fullTitle;
-
-                  return (
-                    <button 
-                      key={l.id}
-                      onClick={() => isUnlocked && onSelectLevel(l.id)}
-                      className={`p-6 rounded-2xl border flex items-center justify-between transition-all touch-manipulation relative ${isUnlocked ? `bg-gradient-to-br from-slate-900 to-slate-800 shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:from-slate-800 hover:to-slate-700 active:scale-95 ${isNext ? 'next-level-glow bg-gradient-to-br from-slate-800 to-slate-900' : l.color}` : 'bg-slate-950 border-slate-800 opacity-60 grayscale'}`}
-                    >
-                      <div className="flex items-center gap-6 text-left flex-1 min-w-0 pr-4">
-                        <div className={`w-16 h-16 flex-shrink-0 rounded-xl flex items-center justify-center font-bold font-mono text-2xl border ${isUnlocked ? `border-current shadow-inner ${isNext ? 'bg-cyan-950 text-white' : 'bg-slate-950/80 text-slate-300'}` : 'border-slate-700 bg-slate-900 text-slate-500'}`}>
-                          {l.id}
-                        </div>
-                        <div className="flex flex-col flex-1 min-w-0">
-                          <span className={`text-lg font-bold font-mono tracking-widest mb-1 uppercase ${isNext ? 'text-cyan-400' : 'text-slate-400 opacity-80'}`}>{t('akte')}</span>
-                          <span className={`text-2xl font-bold font-mono uppercase tracking-widest leading-tight break-words hyphens-auto ${isNext ? 'text-white' : 'text-slate-200'}`}>{mainTitle}</span>
-                        </div>
-                      </div>
-                      {!isUnlocked && <Lock size={32} className="text-slate-600 flex-shrink-0" />}
-                      {isUnlocked && <PlayCircle size={36} className={`flex-shrink-0 transition-all ${isNext ? 'text-cyan-400 opacity-100' : 'text-slate-400 opacity-90'}`} />}
-                    </button>
-                  );
-                })}
-              </div>
-            </ScreenWrapper>
-          );
-        };
-
-        // --- Level 1 ---
-        const Level1 = ({ state, updateState, onBack, onComplete, agentNames, t, lang, onLangToggle, onTeacherCode }) => {
-          const { answered = false, feedback = "" } = state;
-          const handleAnswer = (c) => {
-            if (c) {
-              updateState({ answered: true, feedback: "" });
-            } else {
-              updateState({ feedback: t('l1_fbWrong') });
-            }
-          };
-          
-          return (
-            <ScreenWrapper title={t('l1_title')} onBack={onBack} agentNames={agentNames} t={t} lang={lang} onLangToggle={onLangToggle} onTeacherCode={onTeacherCode}>
-              <div className="space-y-8 max-w-4xl mx-auto w-full">
-                <InfoCard title={t('l1_infoHead')} t={t}>
-                  <div className="space-y-4">
-                    <p>{t('l1_p1')}</p>
-                    <p>{t('l1_p2')}</p>
-                    <p>{t('l1_p3')}</p>
-                    <p>{t('l1_p4')}</p>
-                  </div>
-                </InfoCard>
-
-                <div className="bg-gradient-to-br from-slate-900 to-slate-950 p-8 rounded-2xl border border-slate-700 shadow-xl relative overflow-hidden">
-                  <SectionTitle icon={HelpCircle} color="text-amber-400" title={t('quizTitle')} />
-                  <div className="text-white font-bold text-xl mb-6 leading-relaxed">
-                    {t('l1_q1')}
-                  </div>
-                  <div className="space-y-4">
-                    <button onClick={() => handleAnswer(false)} className="w-full p-6 bg-slate-950 border border-slate-700 rounded-xl text-white font-normal text-lg text-left active:scale-95 transition-all touch-manipulation hover:bg-slate-800">
-                      {t('l1_a1')}
-                    </button>
-                    <button 
-                      onClick={() => handleAnswer(true)} 
-                      className={`w-full p-6 border rounded-xl font-normal text-lg text-left active:scale-95 transition-all touch-manipulation ${answered ? 'bg-gradient-to-r from-emerald-900 to-emerald-800 text-emerald-400 border-emerald-500 shadow-lg' : 'bg-slate-950 border-slate-700 text-white hover:bg-slate-800'}`}
-                    >
-                      {t('l1_a2')}
-                    </button>
-                    <button onClick={() => handleAnswer(false)} className="w-full p-6 bg-slate-950 border border-slate-700 rounded-xl text-white font-normal text-lg text-left active:scale-95 transition-all touch-manipulation hover:bg-slate-800">
-                      {t('l1_a3')}
-                    </button>
-                  </div>
-                  {feedback && !answered && (
-                    <div className="mt-6 p-6 bg-gradient-to-r from-rose-900 to-rose-800 border border-rose-500 rounded-xl text-rose-300 font-bold font-mono text-2xl uppercase text-center shadow-lg break-words">
-                      {feedback}
-                    </div>
-                  )}
-                </div>
-
-                {answered && (
-                  <div className="space-y-8 pt-4">
-                    <div className="p-8 bg-gradient-to-r from-emerald-900 to-emerald-800 border border-emerald-500 rounded-2xl text-emerald-400 font-bold font-mono text-2xl uppercase tracking-widest flex items-center gap-6 shadow-xl break-words">
-                      <div className="text-emerald-400"><CheckCircle size={36} className="flex-shrink-0" /></div>
-                      {t('l1_success')}
-                    </div>
-                    <Button onClick={onComplete} variant="success" icon={Lock}>{t('finish')}</Button>
-                  </div>
-                )}
-              </div>
-            </ScreenWrapper>
-          );
-        };
-
-        // --- Level 2 ---
-        const Level2 = ({ state, updateState, onBack, onComplete, agentNames, t, lang, onLangToggle, onTeacherCode }) => {
-          const { step = 0, lives = 3, gameWon = false, showABModal = false, worksheetDone = false, feedback = "", isError = false } = state;
-          const profiles = t('l2_profiles');
-
-          const handleHack = (choice) => {
-            if (choice === profiles[step].c) {
-              updateState({ feedback: t('l2_fbRight'), isError: false });
-              setTimeout(() => {
-                if (step + 1 === profiles.length) {
-                  updateState({ gameWon: true, feedback: "" });
-                  setTimeout(() => updateState({ showABModal: true }), 3000);
+            const handleSubmit = () => {
+                if (code === "KleallesFrei") {
+                    onGlobalUnlock();
+                    onClose();
+                } else if (code === "Kleskip") {
+                    onSkipCurrent();
+                    onClose();
                 } else {
-                  updateState({ step: step + 1, feedback: "" });
+                    alert("Falscher Code!");
                 }
-              }, 1500);
-            } else {
-              if (lives - 1 <= 0) {
-                updateState({ feedback: t('l2_fbAlarm'), isError: true });
-                setTimeout(() => updateState({ lives: 3, step: 0, feedback: "" }), 2500);
-              } else {
-                updateState({ lives: lives - 1, feedback: t('l2_fbLife'), isError: true });
-                setTimeout(() => updateState({ feedback: "" }), 1500);
-              }
-            }
-          };
-
-          return (
-            <ScreenWrapper 
-              title={t('l2_title')} 
-              onBack={onBack} 
-              agentNames={agentNames} 
-              t={t} 
-              lang={lang} 
-              onLangToggle={onLangToggle} 
-              onTeacherCode={onTeacherCode}
-              modal={
-                <WorksheetModal isOpen={showABModal} onClose={() => updateState({ showABModal: false, worksheetDone: true })} t={t}>
-                  {t('l2_ab')}
-                </WorksheetModal>
-              }
-            >
-              <div className="space-y-8 max-w-4xl mx-auto w-full">
-                <InfoCard title={t('l2_infoHead')} t={t}>
-                  <div className="space-y-4">
-                    <p>{t('l2_p1')}</p>
-                    <p>{t('l2_p2')}</p>
-                    <p>{t('l2_p3')}</p>
-                  </div>
-                </InfoCard>
-
-                {!gameWon ? (
-                  <div className="bg-gradient-to-br from-slate-900 to-slate-950 p-8 rounded-2xl border border-slate-700 shadow-xl relative">
-                    <SectionTitle icon={Target} color="text-amber-400" title={t('l2_task')} >
-                       <span className="text-amber-400 ml-2">{step + 1} {t('l2_of')} 4</span>
-                    </SectionTitle>
-                    
-                    <div className="flex justify-between items-center mb-6">
-                       <div className="flex gap-2 bg-slate-950 p-3 rounded-xl border border-slate-800 flex-shrink-0 shadow-inner">
-                         {[...Array(3)].map((_, i) => <Heart key={i} size={24} className={`${i < lives ? 'text-rose-500 fill-current drop-shadow-md' : 'text-slate-800'}`} />)}
-                       </div>
-                    </div>
-                    <p className="text-white font-bold text-xl mb-6 text-center leading-relaxed">{t('l2_hackPrompt')}</p>
-                    
-                    <div className="bg-gradient-to-r from-slate-900 to-cyan-950 p-8 rounded-xl border border-cyan-500/50 text-white mb-8 relative shadow-md">
-                      <p className="text-cyan-400 text-lg font-bold font-mono tracking-widest uppercase mb-2 absolute top-[-14px] left-6 bg-slate-900 px-3 border border-cyan-500/30 rounded shadow-sm">{t('l2_profile')}</p>
-                      <p className="text-2xl font-bold font-mono mb-4 text-cyan-50 uppercase break-words pt-2">{profiles[step].name}</p>
-                      <p className="text-lg font-normal text-slate-200 leading-relaxed border-l-4 border-cyan-500/50 pl-4 break-words">"{profiles[step].info}"</p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {profiles[step].opts.map(o => (
-                        <button key={o} onClick={() => handleHack(o)} className="p-6 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl font-bold font-mono text-lg text-white active:scale-95 transition-all touch-manipulation break-all shadow-md">
-                          {o}
-                        </button>
-                      ))}
-                    </div>
-                    {feedback && (
-                      <div className={`mt-8 p-6 rounded-xl border text-center font-bold font-mono text-2xl uppercase tracking-widest break-words ${isError ? 'bg-gradient-to-r from-rose-900 to-rose-800 border-rose-500 text-rose-300 shadow-lg' : 'bg-gradient-to-r from-emerald-900 to-emerald-800 border-emerald-500 text-emerald-300 shadow-lg'}`}>
-                        {feedback}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-8">
-                    <div className="p-10 bg-gradient-to-r from-emerald-900 to-emerald-800 border border-emerald-500 rounded-2xl text-emerald-400 font-bold font-mono text-2xl uppercase tracking-widest text-center shadow-xl leading-relaxed break-words">
-                       {t('l2_success')}
-                    </div>
-                    {worksheetDone && <Button onClick={onComplete} variant="success" icon={Lock}>{t('finish')}</Button>}
-                  </div>
-                )}
-              </div>
-            </ScreenWrapper>
-          );
-        };
-
-        // --- Level 3 ---
-        const Level3 = ({ state, updateState, onBack, onComplete, agentNames, t, lang, onLangToggle, onTeacherCode }) => {
-          const times = t('l3_times');
-          
-          const order = state.order || [2, 3, 4, 1];
-          
-          const baseItems = {
-            2: { text: lang === 'de' ? "passwort" : "пароль", time: times.t2 },
-            3: { text: lang === 'de' ? "KatzeHund" : "КошкаСобака", time: times.t4 },
-            4: { text: lang === 'de' ? "Sommer2024" : "Лето2024", time: times.t1 },
-            1: { text: "M!ss1on_P@ss", time: times.t3 }
-          };
-          
-          const passwords = order.map(id => ({ id, ...baseItems[id] }));
-
-          const { checked = false, analysisDone = false, selections = [], feedback = "", isError = false } = state;
-          const correctOrder = [2, 3, 4, 1];
-
-          const move = (idx, dir) => {
-            let n = [...order];
-            let target = idx + dir;
-            if (target < 0 || target >= n.length) return;
-            [n[idx], n[target]] = [n[target], n[idx]];
-            updateState({ order: n, checked: false, feedback: "" });
-          };
-
-          const isSorted = passwords.every((p, i) => p.id === correctOrder[i]);
-          const analysisOptions = t('l3_opts');
-
-          return (
-            <ScreenWrapper title={t('l3_title')} onBack={onBack} agentNames={agentNames} t={t} lang={lang} onLangToggle={onLangToggle} onTeacherCode={onTeacherCode}>
-              <div className="space-y-8 max-w-4xl mx-auto w-full">
-                <InfoCard title={t('l3_infoHead')} t={t}>
-                  <div className="space-y-4">
-                    <p>{t('l3_p1')}</p>
-                    <p>{t('l3_p2')}</p>
-                    <p>{t('l3_p3')}</p>
-                    <p>{t('l3_p4')}</p>
-                  </div>
-                </InfoCard>
-
-                <div className="bg-gradient-to-br from-slate-900 to-slate-950 p-8 rounded-2xl border border-slate-700 shadow-xl">
-                  <SectionTitle icon={Target} color="text-amber-400" title={t('l3_sortTitle')} />
-                  <p className="text-white font-bold text-xl mb-6 leading-relaxed">{t('l3_sortSub')}</p>
-                  
-                  <div className="bg-rose-950/50 p-3 rounded-xl text-center text-lg font-bold font-mono uppercase mb-6 border border-rose-500/50 tracking-widest text-rose-400">⬆️ {t('l3_weak')} ⬆️</div>
-                  
-                  <div className="space-y-4">
-                    {passwords.map((p, i) => {
-                      const isCorrectPos = checked && p.id === correctOrder[i];
-                      const isWrongPos = checked && p.id !== correctOrder[i];
-                      return (
-                        <div key={p.id} className={`p-4 md:p-6 border rounded-xl flex justify-between items-center transition-all ${isCorrectPos ? 'bg-gradient-to-r from-emerald-900 to-emerald-800 border-emerald-500 text-emerald-300' : isWrongPos ? 'bg-gradient-to-r from-rose-900 to-rose-800 border-rose-500 text-rose-300' : 'bg-slate-900 border-slate-700 text-white'} shadow-sm`}>
-                          <div className="flex flex-col min-w-0 flex-1 pr-4">
-                            <p className={`font-bold font-mono text-xl md:text-2xl tracking-widest break-all`}>{p.text}</p>
-                            {isSorted && checked && <p className="text-slate-300 font-normal text-lg mt-1 flex items-center gap-2"><Lock size={18}/> {t('l3_time')} <span className="text-cyan-300">{p.time}</span></p>}
-                          </div>
-                          <div className="flex gap-2 flex-shrink-0">
-                            <button onClick={() => move(i, -1)} disabled={i === 0 || checked} className="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl border border-slate-600 disabled:opacity-30 touch-manipulation active:scale-90 transition-transform"><ArrowUp size={24} className="text-white"/></button>
-                            <button onClick={() => move(i, 1)} disabled={i === passwords.length - 1 || checked} className="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl border border-slate-600 disabled:opacity-30 touch-manipulation active:scale-90 transition-transform"><ArrowDown size={24} className="text-white"/></button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="bg-emerald-950/50 p-3 rounded-xl text-center text-lg font-bold font-mono uppercase mt-6 border border-emerald-500/50 tracking-widest text-emerald-400">⬇️ {t('l3_strong')} ⬇️</div>
-
-                  {!checked ? (
-                    <Button onClick={() => { updateState({ checked: true }); }} className="mt-8" variant="primary">{t('login')}</Button>
-                  ) : !isSorted ? (
-                     <div className="mt-8 space-y-6">
-                       <div className="p-6 bg-gradient-to-r from-rose-900 to-rose-800 border border-rose-500 rounded-xl text-rose-300 font-bold font-mono text-2xl uppercase text-center shadow-lg break-words">
-                         {t('l3_fbWrong')}
-                       </div>
-                       <Button onClick={() => updateState({ checked: false })} variant="secondary">{t('tryAgain')}</Button>
-                     </div>
-                  ) : (
-                    <div className="mt-8 p-8 bg-gradient-to-r from-emerald-900 to-emerald-800 border border-emerald-500 rounded-xl text-emerald-300 font-bold font-mono text-2xl uppercase tracking-widest text-center shadow-lg break-words">
-                       {t('l3_fbRight')}
-                    </div>
-                  )}
-                </div>
-
-                {isSorted && checked && (
-                  <div className="bg-gradient-to-br from-slate-900 to-cyan-950 p-8 rounded-2xl border border-cyan-500/50 shadow-xl mt-8">
-                    <SectionTitle icon={Target} color="text-cyan-400" title={t('l3_analysisTitle')} />
-                    <p className="text-white font-bold text-xl mb-6 leading-relaxed">{t('l3_analysisSub')}</p>
-                    <div className="space-y-4">
-                      {analysisOptions.map(o => (
-                        <button 
-                          key={o.id} 
-                          onClick={() => {
-                            if (analysisDone) return;
-                            let s = selections.includes(o.id) ? selections.filter(x => x !== o.id) : [...selections, o.id];
-                            updateState({ selections: s });
-                          }}
-                          className={`w-full p-6 border rounded-xl text-left font-normal text-lg flex items-start gap-4 transition-all touch-manipulation break-words shadow-md ${selections.includes(o.id) ? 'bg-gradient-to-r from-cyan-900 to-cyan-800 border-cyan-500 text-cyan-100' : 'bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800'}`}
-                        >
-                          <div className={`w-8 h-8 mt-1 rounded border flex-shrink-0 flex items-center justify-center ${selections.includes(o.id) ? 'border-cyan-400 bg-cyan-500' : 'border-slate-500 bg-slate-800'}`}>
-                            {selections.includes(o.id) && <Check size={20} className="text-slate-950 font-bold" />}
-                          </div>
-                          <span className="flex-1">{o.text}</span>
-                        </button>
-                      ))}
-                    </div>
-                    {!analysisDone ? (
-                      <>
-                        {feedback && <div className="mt-8 p-6 bg-gradient-to-r from-rose-900 to-rose-800 border border-rose-500 rounded-xl text-rose-300 font-bold font-mono text-2xl uppercase text-center shadow-lg break-words">{feedback}</div>}
-                        <Button onClick={() => {
-                          const correctIds = analysisOptions.filter(x => x.c).map(x => x.id);
-                          const isCorrect = selections.length === correctIds.length && selections.every(x => correctIds.includes(x));
-                          if (isCorrect) updateState({ analysisDone: true, feedback: "" });
-                          else updateState({ feedback: t('l3_analysisWrong') });
-                        }} className="mt-8" variant="primary">{t('check')}</Button>
-                      </>
-                    ) : (
-                      <div className="mt-8 space-y-8">
-                         <div className="p-8 bg-gradient-to-r from-emerald-900 to-emerald-800 border border-emerald-500 rounded-xl text-emerald-300 font-bold font-mono text-2xl uppercase tracking-widest text-center shadow-lg break-words">
-                            {t('l3_analysisRight')}
-                         </div>
-                         <Button onClick={onComplete} variant="success" icon={Lock}>{t('finish')}</Button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </ScreenWrapper>
-          );
-        };
-
-        // --- Level 4 ---
-        const Level4 = ({ state, updateState, onBack, onComplete, agentNames, t, lang, onLangToggle, onTeacherCode }) => {
-          const { step = 0, showAB = false, abDone = false, feedback = "", isError = false } = state;
-          const questions = t('l4_qs');
-
-          const handleAns = (c) => {
-            if (c) {
-              updateState({ feedback: t('correct'), isError: false });
-              setTimeout(() => {
-                if (step + 1 === questions.length) {
-                  updateState({ feedback: t('l4_checkPassed'), isError: false, showAB: true });
-                  setTimeout(() => { if(!abDone) updateState({ showAB: true }); }, 3000);
-                } else {
-                  updateState({ step: step + 1, feedback: "" });
-                }
-              }, 1500);
-            } else {
-              updateState({ feedback: t('l4_fbWrong'), isError: true });
-              setTimeout(() => updateState({ feedback: "" }), 1500);
-            }
-          };
-
-          return (
-            <ScreenWrapper 
-              title={t('l4_title')} 
-              onBack={onBack} 
-              agentNames={agentNames} 
-              t={t} 
-              lang={lang} 
-              onLangToggle={onLangToggle} 
-              onTeacherCode={onTeacherCode}
-              modal={
-                <WorksheetModal isOpen={showAB} onClose={() => updateState({ showAB: false, abDone: true })} t={t}>
-                  {t('l4_ab')}
-                </WorksheetModal>
-              }
-            >
-              <div className="space-y-8 max-w-4xl mx-auto w-full">
-                <InfoCard title={t('l4_infoHead')} t={t}>
-                  <div className="space-y-6">
-                    <p className="font-bold font-mono text-cyan-400 uppercase text-2xl break-words">{t('l4_sub')}</p>
-                    <ul className="space-y-4 bg-slate-900 p-8 rounded-xl border border-cyan-500/30 shadow-inner text-lg">
-                      <li className="flex items-start gap-4"><CheckCircle size={24} className="text-emerald-400 flex-shrink-0 mt-1" /> <span className="break-words">{t('l4_li1')}</span></li>
-                      <li className="flex items-start gap-4"><CheckCircle size={24} className="text-emerald-400 flex-shrink-0 mt-1" /> <span className="break-words">{t('l4_li2')}</span></li>
-                      <li className="flex items-start gap-4"><CheckCircle size={24} className="text-emerald-400 flex-shrink-0 mt-1" /> <span className="break-words">{t('l4_li3')}</span></li>
-                      <li className="flex items-start gap-4"><CheckCircle size={24} className="text-emerald-400 flex-shrink-0 mt-1" /> <span className="break-words">{t('l4_li4')}</span></li>
-                      <li className="flex items-start gap-4"><CheckCircle size={24} className="text-emerald-400 flex-shrink-0 mt-1" /> <span className="break-words">{t('l4_li5')}</span></li>
-                    </ul>
-                  </div>
-                </InfoCard>
-
-                {!showAB && !abDone ? (
-                  <div className="bg-gradient-to-br from-slate-900 to-slate-950 p-8 rounded-2xl border border-slate-700 shadow-xl">
-                    <SectionTitle icon={HelpCircle} color="text-amber-400" title={t('l4_check')} >
-                       <span className="text-amber-400 ml-2">{step + 1}/5</span>
-                    </SectionTitle>
-                    <div className="text-white font-bold text-xl mb-6 leading-relaxed">
-                      {questions[step].q}
-                    </div>
-                    <div className="grid grid-cols-1 gap-4">
-                      {questions[step].opts.map((o, i) => (
-                        <button key={i} onClick={() => handleAns(o.c)} className="p-6 bg-slate-900 hover:bg-slate-800 border border-slate-600 rounded-xl font-normal text-lg text-white active:scale-95 transition-all touch-manipulation break-words text-left shadow-md">
-                          {o.t}
-                        </button>
-                      ))}
-                    </div>
-                    {feedback && (
-                      <div className={`mt-8 p-6 rounded-xl border text-center font-bold font-mono text-2xl uppercase tracking-widest break-words ${isError ? 'bg-gradient-to-r from-rose-900 to-rose-800 border-rose-500 text-rose-300 shadow-lg' : 'bg-gradient-to-r from-emerald-900 to-emerald-800 border-emerald-500 text-emerald-300 shadow-lg'}`}>
-                        {feedback}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-8 text-center">
-                    <div className="p-10 bg-gradient-to-r from-emerald-900 to-emerald-800 border border-emerald-500 rounded-2xl text-emerald-300 font-bold font-mono text-2xl uppercase tracking-widest shadow-xl leading-relaxed break-words">
-                       {t('l4_checkPassed')}
-                    </div>
-                    {abDone && <Button onClick={onComplete} variant="success" icon={Lock}>{t('finish')}</Button>}
-                  </div>
-                )}
-              </div>
-            </ScreenWrapper>
-          );
-        };
-
-        // --- Level 5 ---
-        const Level5 = ({ state, updateState, onBack, onComplete, agentNames, t, lang, onLangToggle, onTeacherCode }) => {
-          const { trickPhase = 'info', taskIdx = 0, input = "", feedback = "", isError = false, showAB = false, abDone = false, failCount = 0 } = state;
-          
-          const tasks = t('l5_tasks');
-          const currentTask = tasks[taskIdx] || tasks[0];
-          const currentTrick = currentTask.trick;
-
-          useEffect(() => {
-            if (trickPhase === 'summary' && !abDone && !showAB) {
-               const timer = setTimeout(() => {
-                  updateState({ showAB: true });
-               }, 3000);
-               return () => clearTimeout(timer);
-            }
-          }, [trickPhase, abDone, showAB, updateState]);
-
-          const check = () => {
-            if (input.trim() === currentTask.c) {
-              updateState({ feedback: t('correct'), isError: false, failCount: 0 });
-              setTimeout(() => {
-                const nextIdx = taskIdx + 1;
-                if (nextIdx >= tasks.length) {
-                  updateState({ trickPhase: 'transition', feedback: "", input: "" }); 
-                } else if (tasks[nextIdx].trick !== currentTrick) {
-                  updateState({ trickPhase: 'transition', feedback: "", input: "" });
-                } else {
-                  updateState({ taskIdx: nextIdx, feedback: "", input: "" });
-                }
-              }, 1500);
-            } else {
-              let f = "";
-              if (failCount === 0) f = t('l5_fb_read');
-              else if (failCount === 1) f = currentTrick === 4 ? t('l5_fb_all') : t('l5_fb_trick').replace('{0}', currentTrick);
-              else f = t('l5_fb_hint').replace('{0}', currentTask.hint);
-              updateState({ feedback: f, isError: true, failCount: failCount + 1 });
-            }
-          };
-
-          if (trickPhase === 'summary') {
-            return (
-              <ScreenWrapper 
-                title={t('l5_sumTitle')} 
-                agentNames={agentNames} 
-                t={t} 
-                lang={lang} 
-                onLangToggle={onLangToggle} 
-                onTeacherCode={onTeacherCode}
-                modal={
-                  <WorksheetModal isOpen={showAB} onClose={() => updateState({ showAB: false, abDone: true })} t={t}>
-                    {t('l5_ab')}
-                  </WorksheetModal>
-                }
-              >
-                <div className="space-y-8 max-w-4xl mx-auto w-full">
-                  <InfoCard title={`${t('l5_trick')} 1: ${t('l5_t1')}`} t={t}>
-                    <p className="font-normal">{t('l5_t1_p1')}</p>
-                    <p className="mt-4">{t('l5_t1_p2')} {t('l5_t1_p3')}</p>
-                    <p className="mt-6 font-bold font-mono text-cyan-400 bg-cyan-950/80 border-l-4 border-cyan-500 p-4 rounded-r-xl text-lg shadow-md break-words">{t('l5_ex')} {t('l5_t1_ex')}</p>
-                  </InfoCard>
-                  <InfoCard title={`${t('l5_trick')} 2: ${t('l5_t2')}`} t={t}>
-                    <p>{t('l5_t2_p2')}</p>
-                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 text-emerald-400 font-bold font-mono text-lg">
-                      <li className="bg-emerald-950/80 p-4 border-l-4 border-emerald-500 rounded-r-xl break-words shadow-sm">{t('l5_t2_r1')}</li>
-                      <li className="bg-emerald-950/80 p-4 border-l-4 border-emerald-500 rounded-r-xl break-words shadow-sm">{t('l5_t2_r2')}</li>
-                      <li className="bg-emerald-950/80 p-4 border-l-4 border-emerald-500 rounded-r-xl break-words shadow-sm">{t('l5_t2_r3')}</li>
-                      <li className="bg-emerald-950/80 p-4 border-l-4 border-emerald-500 rounded-r-xl break-words shadow-sm">{t('l5_t2_r4')}</li>
-                    </ul>
-                  </InfoCard>
-                  <InfoCard title={`${t('l5_trick')} 3: ${t('l5_t3')}`} t={t}>
-                    <p>{t('l5_t3_p4')}</p>
-                    <p className="mt-6 font-bold font-mono text-cyan-400 border-l-4 border-cyan-500 bg-cyan-950/80 p-4 rounded-r-xl text-lg shadow-md break-words">{t('l5_ex')} {t('l5_t3_ex')}</p>
-                  </InfoCard>
-                  {abDone && <Button onClick={onComplete} variant="success" icon={Lock}>{t('finish')}</Button>}
-                </div>
-              </ScreenWrapper>
-            );
-          }
-
-          if (trickPhase === 'transition') {
-            let btnText = t('next');
-            if (taskIdx === 1) btnText = `${t('next')} ${t('l5_trick')} 2`;
-            else if (taskIdx === 3) btnText = `${t('next')} ${t('l5_trick')} 3`;
-            else if (taskIdx === 4) btnText = t('l5_btn_test');
-            else if (taskIdx >= 6) btnText = t('l5_btn_proto');
+                setCode("");
+            };
 
             return (
-              <ScreenWrapper title={`${t('l5_title')} - ${t('l5_trick')} ${currentTrick}`} agentNames={agentNames} t={t} lang={lang} onLangToggle={onLangToggle} onTeacherCode={onTeacherCode}>
-                <div className="flex flex-col items-center justify-center py-16 space-y-10">
-                  <Award size={80} className="text-emerald-400 drop-shadow-lg" />
-                  <h2 className="text-2xl font-bold font-mono text-emerald-400 text-center uppercase tracking-widest leading-relaxed break-words">{t('l5_mastered')}</h2>
-                  <Button 
-                    onClick={() => {
-                      if (taskIdx >= 6) updateState({ trickPhase: 'summary' });
-                      else updateState({ taskIdx: taskIdx + 1, trickPhase: 'info' });
-                    }} 
-                    variant="success" 
-                    className="max-w-xl mt-8"
-                  >
-                    {btnText} <ArrowRight size={24} />
-                  </Button>
+                <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                    <div className="bg-white p-8 rounded-3xl border-2 border-slate-200 shadow-2xl max-w-sm w-full animate-fade-in">
+                        <h3 className="text-2xl font-bold font-title text-slate-800 mb-6 flex items-center gap-3"><Key className="text-indigo-500"/> Lehrer-Login</h3>
+                        <p className="text-slate-600 mb-6 font-medium text-sm">Bitte gib den geheimen Lehrercode ein.</p>
+                        <input type="password" value={code} onChange={e=>setCode(e.target.value)} placeholder="Code eingeben..." className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl p-4 text-xl outline-none focus:border-indigo-500 mb-8 font-mono" />
+                        <div className="flex gap-4">
+                            <Button onClick={handleSubmit} variant="primary">OK</Button>
+                            <Button onClick={onClose} variant="secondary">Zurück</Button>
+                        </div>
+                    </div>
                 </div>
-              </ScreenWrapper>
             );
-          }
-
-          let trickName = currentTrick === 1 ? t('l5_t1') : currentTrick === 2 ? t('l5_t2') : currentTrick === 3 ? t('l5_t3') : t('l5_t4');
-
-          return (
-            <ScreenWrapper title={t('l5_title')} onBack={onBack} agentNames={agentNames} t={t} lang={lang} onLangToggle={onLangToggle} onTeacherCode={onTeacherCode}>
-              <div className="space-y-8 max-w-4xl mx-auto w-full">
-                {(trickPhase === 'info' || trickPhase === 'task') && (
-                  <div className="space-y-8">
-                    <InfoCard title={`${currentTrick < 4 ? t('l5_trick') : ''} ${currentTrick < 4 ? currentTrick + ':' : ''} ${trickName}`} t={t}>
-                      {currentTrick === 1 && (
-                        <div className="space-y-4">
-                          <p>{t('l5_t1_p1')}</p>
-                          <p>{t('l5_t1_p2')}</p>
-                          <p>{t('l5_t1_p3')}</p>
-                          <p className="mt-8 text-cyan-500 font-bold font-mono uppercase tracking-widest border-b border-cyan-500/30 pb-2">{t('l5_ex')}</p>
-                          <p className="font-bold font-mono text-white text-2xl mt-4 break-words">{t('l5_t1_ex')}</p>
-                        </div>
-                      )}
-                      {currentTrick === 2 && (
-                        <div className="space-y-4">
-                          <p>{t('l5_t2_p1')}</p>
-                          <p>{t('l5_t2_p2')}</p>
-                          <p className="mt-8 text-cyan-500 font-bold font-mono uppercase tracking-widest border-b border-cyan-500/30 pb-2">{t('l5_ex')}</p>
-                          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 text-emerald-400 font-bold font-mono text-lg">
-                            <li className="bg-emerald-950/80 p-4 rounded-xl border border-emerald-500/50 break-words shadow-sm">{t('l5_t2_r1')}</li>
-                            <li className="bg-emerald-950/80 p-4 rounded-xl border border-emerald-500/50 break-words shadow-sm">{t('l5_t2_r2')}</li>
-                            <li className="bg-emerald-950/80 p-4 rounded-xl border border-emerald-500/50 break-words shadow-sm">{t('l5_t2_r3')}</li>
-                            <li className="bg-emerald-950/80 p-4 rounded-xl border border-emerald-500/50 break-words shadow-sm">{t('l5_t2_r4')}</li>
-                          </ul>
-                        </div>
-                      )}
-                      {currentTrick === 3 && (
-                        <div className="space-y-4">
-                          <p>{t('l5_t3_p1')}</p>
-                          <p className="mt-4">{t('l5_t3_p3')}</p>
-                          <p>{t('l5_t3_p4')}</p>
-                          <p className="mt-8 text-cyan-500 font-bold font-mono uppercase tracking-widest border-b border-cyan-500/30 pb-2">{t('l5_ex')}</p>
-                          <p className="font-bold font-mono text-white border-l-4 border-cyan-500 bg-cyan-950/80 p-4 rounded-r-xl text-2xl mt-4 break-words shadow-sm">{t('l5_t3_ex')}</p>
-                        </div>
-                      )}
-                      {currentTrick === 4 && (
-                        <div className="space-y-4">
-                          <p>{t('l5_t4_p1')}</p>
-                          <p>{t('l5_t4_p2')}</p>
-                          <ul className="space-y-4 mt-6 font-normal text-lg bg-slate-900 p-6 rounded-xl border border-slate-700 shadow-inner">
-                            <li className="flex gap-4 items-start"><Check size={24} className="text-cyan-400 flex-shrink-0 mt-1"/> <span className="break-words">{t('l5_t4_l1')}</span></li>
-                            <li className="flex gap-4 items-start"><Check size={24} className="text-cyan-400 flex-shrink-0 mt-1"/> <span className="break-words">{t('l5_t4_l2')}</span></li>
-                            <li className="flex gap-4 items-start"><Check size={24} className="text-cyan-400 flex-shrink-0 mt-1"/> <span className="break-words">{t('l5_t4_l3')}</span></li>
-                          </ul>
-                        </div>
-                      )}
-                    </InfoCard>
-                  </div>
-                )}
-
-                {trickPhase === 'info' && (
-                   <Button onClick={() => updateState({ trickPhase: 'task' })} variant="primary">{t('l5_toExercises')}</Button>
-                )}
-
-                {trickPhase === 'task' && (
-                  <div className="bg-gradient-to-br from-slate-900 to-slate-950 p-8 rounded-2xl border border-slate-700 shadow-xl">
-                    <SectionTitle icon={Target} color="text-cyan-400" title={currentTask.name} />
-                    <div className="text-white text-center font-bold text-xl mb-6 leading-relaxed">
-                      "{currentTask.s}"
-                      {currentTask.p && (
-                        <div className="mt-6 text-amber-400 font-bold font-mono text-lg uppercase tracking-widest bg-amber-950/50 p-4 rounded-xl border border-amber-500/50 shadow-md break-words">
-                          {t('l5_append')} <span className="text-white bg-slate-900 px-3 py-1 rounded border border-slate-700 mx-1 inline-block">{currentTask.p}</span> <span className="text-white bg-slate-900 px-3 py-1 rounded border border-slate-700 mx-1 inline-block">{currentTask.sc}</span> {t('l5_append2')}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="relative mb-8">
-                      <input 
-                        type="text" 
-                        value={input}
-                        onChange={e => updateState({ input: e.target.value })}
-                        placeholder={t('l5_enterPwd')}
-                        className="w-full p-6 bg-slate-950 border border-slate-600 rounded-xl text-cyan-300 font-bold font-mono text-2xl text-center outline-none focus:border-cyan-400 focus:shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all placeholder:text-slate-700 tracking-widest"
-                      />
-                    </div>
-
-                    {feedback && (
-                      <div className={`mb-8 p-6 rounded-xl border text-center font-bold font-mono text-2xl uppercase tracking-widest break-words ${isError ? 'bg-gradient-to-r from-rose-900 to-rose-800 border-rose-500 text-rose-300 shadow-lg' : 'bg-gradient-to-r from-emerald-900 to-emerald-800 border-emerald-500 text-emerald-300 shadow-lg'}`}>
-                        {feedback}
-                      </div>
-                    )}
-
-                    {!feedback.includes("KORREKT") && !feedback.includes("ВЕРНО") && (
-                      <Button onClick={check} variant="primary">{t('l5_testPwd')}</Button>
-                    )}
-                    
-                    {(feedback.includes("KORREKT") || feedback.includes("ВЕРНО")) && (
-                      <div className="mt-8 p-4 text-center text-emerald-400 font-bold font-mono uppercase text-2xl tracking-widest flex items-center justify-center gap-4 break-words">
-                         <Terminal size={32} className="animate-pulse flex-shrink-0" /> {t('loading')}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </ScreenWrapper>
-          );
         };
 
-        // --- Level 6 ---
-        const Level6 = ({ onComplete, agentNames, t, lang, onLangToggle, onTeacherCode }) => (
-          <ScreenWrapper title={t('l6_title')} agentNames={agentNames} t={t} lang={lang} onLangToggle={onLangToggle} onTeacherCode={onTeacherCode}>
-            <div className="text-center space-y-10 max-w-4xl mx-auto py-6 w-full">
-              <Award size={80} className="text-cyan-400 mx-auto drop-shadow-lg" />
-              <h2 className="text-2xl font-bold font-mono text-white uppercase tracking-widest break-words">{t('l6_head')}</h2>
-              <p className="text-lg font-normal text-slate-200 pb-6 border-b border-slate-800 break-words">{t('l6_sub')}</p>
-              
-              <div className="bg-gradient-to-br from-slate-900 to-slate-950 p-8 rounded-2xl border border-rose-500/50 text-left space-y-8 shadow-xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 bg-gradient-to-l from-rose-600 to-rose-500 text-white font-bold font-mono px-4 py-1 rounded-bl-xl text-lg uppercase tracking-widest shadow-md">{t('topSecret')}</div>
-                <h3 className="text-2xl font-bold font-mono uppercase text-rose-400 flex items-center gap-4 mt-2 break-words"><ShieldAlert size={32} className="flex-shrink-0"/> {t('l6_alert')}</h3>
-                <p className="text-lg font-normal text-slate-100 leading-relaxed break-words">{t('l6_p1')}</p>
-                <ul className="list-decimal pl-8 space-y-6 text-lg font-normal text-slate-100 marker:text-rose-500 marker:font-bold">
-                  <li className="break-words">{t('l6_li1')}</li>
-                  <li className="break-words">{t('l6_li2')}</li>
-                  <li className="break-words">{t('l6_li3')}</li>
-                </ul>
-                <div className="bg-rose-950/50 p-6 rounded-xl text-rose-400 text-lg border border-rose-500/50 font-bold text-center uppercase tracking-widest shadow-inner break-words">
-                  {t('l6_warn')}
+        // --- SCREENS ---
+        const WelcomeScreen = ({ onStart }) => (
+            <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 relative z-10">
+                <div className="w-full max-w-2xl bg-white/95 backdrop-blur-xl p-8 sm:p-12 rounded-[2.5rem] border-4 border-indigo-100 shadow-2xl text-center">
+                    <div className="bg-gradient-to-br from-indigo-500 to-violet-500 w-28 h-28 sm:w-32 sm:h-32 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-xl rotate-3 hover:rotate-0 transition-transform">
+                        <Smile size={64} className="text-white" />
+                    </div>
+                    <h1 className="text-5xl sm:text-6xl font-title font-black text-indigo-600 mb-6 drop-shadow-sm leading-tight">Mein digitales Ich</h1>
+                    <p className="text-xl sm:text-2xl text-slate-600 mb-10 font-medium px-4 leading-relaxed">
+                        Willkommen zum Avatar-Projekt!<br/> 
+                        Setzt euch zu zweit an ein Tablet oder einen PC und bearbeitet die Level gemeinsam.
+                    </p>
+                    <Button onClick={onStart} icon={PlayCircle} className="text-2xl py-5 sm:py-6 rounded-3xl">Projekt starten!</Button>
                 </div>
-              </div>
-              <Button onClick={onComplete} variant="success" icon={Lock} className="mt-6">{t('finish')}</Button>
             </div>
-          </ScreenWrapper>
         );
 
-        // --- Bonus: Manager ---
-        const BonusManager = ({ state, updateState, onBack, onComplete, agentNames, t, lang, onLangToggle, onTeacherCode }) => {
-          const { step = 0, feedback = "", isError = false } = state;
-          const qs = t('l7_qs');
+        const MenuScreen = ({ unlocked, onSelect }) => {
+            const levels = [
+                { id: 1, title: "Dein digitales Schutzschild", icon: Shield, color: "indigo" },
+                { id: 2, title: "Avatar erstellen", icon: PenTool, color: "emerald" }
+            ];
 
-          const handleAns = (c) => {
-            if (c) {
-              updateState({ feedback: t('correct'), isError: false });
-              setTimeout(() => {
-                if (step + 1 === qs.length) updateState({ feedback: t('l7_fbRight') });
-                else updateState({ step: step + 1, feedback: "" });
-              }, 1500);
-            } else {
-              updateState({ feedback: t('l7_fbWrong'), isError: true });
-              setTimeout(() => updateState({ feedback: "" }), 2000);
-            }
-          };
-
-          return (
-            <ScreenWrapper title={t('l7_title')} onBack={onBack} agentNames={agentNames} t={t} lang={lang} onLangToggle={onLangToggle} onTeacherCode={onTeacherCode}>
-              <div className="space-y-8 max-w-4xl mx-auto w-full">
-                <InfoCard title={t('l7_infoHead')} t={t}>
-                  <div className="space-y-6">
-                    <p className="break-words">{t('l7_p1')}</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
-                      <div className="bg-emerald-950/80 p-6 rounded-xl border border-emerald-500/50 text-slate-100 font-normal text-lg shadow-md break-words">
-                        <span className="uppercase text-lg block mb-3 tracking-widest text-emerald-400 font-bold font-mono border-b border-emerald-500/30 pb-2">{t('l7_adv')}</span> {t('l7_advT')}
-                      </div>
-                      <div className="bg-rose-950/80 p-6 rounded-xl border border-rose-500/50 text-slate-100 font-normal text-lg shadow-md break-words">
-                        <span className="uppercase text-lg block mb-3 tracking-widest text-rose-400 font-bold font-mono border-b border-rose-500/30 pb-2">{t('l7_dis')}</span> {t('l7_disT')}
-                      </div>
-                    </div>
-                  </div>
-                </InfoCard>
-                <div className="bg-gradient-to-br from-slate-900 to-slate-950 p-8 rounded-2xl border border-slate-700 shadow-xl">
-                  <SectionTitle icon={HelpCircle} color="text-amber-400" title={t('l7_exam')}>
-                    <span className="ml-2">{step + 1}/3</span>
-                  </SectionTitle>
-                  <div className="text-white font-bold text-xl mb-6 leading-relaxed">
-                    {qs[step].q}
-                  </div>
-                  <div className="grid grid-cols-1 gap-4">
-                    {qs[step].opts.map((o, i) => (
-                      <button key={i} onClick={() => handleAns(o.c)} className="p-6 bg-slate-900 hover:bg-slate-800 border border-slate-600 rounded-xl font-normal text-lg text-white active:scale-95 transition-all touch-manipulation break-words text-left shadow-md">
-                        {o.t}
-                      </button>
-                    ))}
-                  </div>
-                  {feedback && (
-                    <div className={`mt-8 p-6 rounded-xl border text-center font-bold font-mono text-2xl uppercase tracking-widest break-words ${isError ? 'bg-gradient-to-r from-rose-900 to-rose-800 border-rose-500 text-rose-300 shadow-lg' : 'bg-gradient-to-r from-emerald-900 to-emerald-800 border-emerald-500 text-emerald-300 shadow-lg'}`}>
-                      {feedback}
-                    </div>
-                  )}
-                  {feedback === t('l7_fbRight') && (
-                    <Button onClick={onComplete} variant="success" className="mt-8" icon={Lock}>{t('finish')}</Button>
-                  )}
-                </div>
-              </div>
-            </ScreenWrapper>
-          );
-        };
-
-        // --- Bonus: 2FA ---
-        const Bonus2FA = ({ state, updateState, onBack, onComplete, agentNames, t, lang, onLangToggle, onTeacherCode }) => {
-          const { step = 0, feedback = "", isError = false } = state;
-          const qs = t('l8_qs');
-
-          const handleAns = (c) => {
-            if (c) {
-              updateState({ feedback: t('correct'), isError: false });
-              setTimeout(() => {
-                if (step + 1 === qs.length) updateState({ feedback: t('l7_fbRight') }); // Using same string
-                else updateState({ step: step + 1, feedback: "" });
-              }, 1500);
-            } else {
-              updateState({ feedback: t('l8_fbWrong'), isError: true });
-              setTimeout(() => updateState({ feedback: "" }), 1500);
-            }
-          };
-
-          return (
-            <ScreenWrapper title={t('l8_title')} onBack={onBack} agentNames={agentNames} t={t} lang={lang} onLangToggle={onLangToggle} onTeacherCode={onTeacherCode}>
-              <div className="space-y-8 max-w-4xl mx-auto w-full">
-                <InfoCard title={t('l8_infoHead')} t={t}>
-                  <div className="space-y-4">
-                    <p className="break-words">{t('l8_p1')}</p>
-                    <p className="break-words">{t('l8_p2')}</p>
-                    <p className="break-words">{t('l8_p3')}</p>
-                  </div>
-                </InfoCard>
-                <div className="bg-gradient-to-br from-slate-900 to-slate-950 p-8 rounded-2xl border border-slate-700 shadow-xl">
-                  <SectionTitle icon={HelpCircle} color="text-amber-400" title={t('l7_exam')}>
-                     <span className="ml-2">{step + 1}/3</span>
-                  </SectionTitle>
-                  <div className="text-white font-bold text-xl mb-6 leading-relaxed">
-                    {qs[step].q}
-                  </div>
-                  <div className="grid grid-cols-1 gap-4">
-                    {qs[step].opts.map((o, i) => (
-                      <button key={i} onClick={() => handleAns(o.c)} className="p-6 bg-slate-900 hover:bg-slate-800 border border-slate-600 rounded-xl font-normal text-lg text-white active:scale-95 transition-all touch-manipulation break-words text-left shadow-md">
-                        {o.t}
-                      </button>
-                    ))}
-                  </div>
-                  {feedback && (
-                    <div className={`mt-8 p-6 rounded-xl border text-center font-bold font-mono text-2xl uppercase tracking-widest break-words ${isError ? 'bg-gradient-to-r from-rose-900 to-rose-800 border-rose-500 text-rose-300 shadow-lg' : 'bg-gradient-to-r from-emerald-900 to-emerald-800 border-emerald-500 text-emerald-300 shadow-lg'}`}>
-                      {feedback}
-                    </div>
-                  )}
-                  {feedback === t('l7_fbRight') && (
-                    <Button onClick={onComplete} variant="success" className="mt-8" icon={Lock}>{t('finish')}</Button>
-                  )}
-                </div>
-              </div>
-            </ScreenWrapper>
-          );
-        };
-
-        // --- Bonus: Phishing ---
-        const BonusPhishing = ({ state, updateState, onBack, onComplete, agentNames, t, lang, onLangToggle, onTeacherCode }) => {
-          const { step = 0, feedback = "", flashRed = false, solved = false, isError = false } = state;
-          const emails = t('l9_emails');
-
-          const handleChoice = (isPhish) => {
-            if (isPhish === emails[step].phishing) {
-              updateState({ feedback: t('correct'), isError: false });
-              setTimeout(() => {
-                if (step + 1 === emails.length) updateState({ feedback: t('l9_success'), solved: true });
-                else updateState({ step: step + 1, feedback: "" });
-              }, 1500);
-            } else {
-              updateState({ feedback: t('l9_fbWrong'), isError: true });
-              setTimeout(() => updateState({ feedback: "" }), 2000);
-            }
-          };
-
-          const clickLink = () => {
-            if (emails[step].phishing) {
-              updateState({ flashRed: true, feedback: t('l9_fbAlarm'), isError: true });
-              setTimeout(() => updateState({ flashRed: false }), 500);
-            } else {
-              updateState({ feedback: t('l9_fbLucky'), isError: false });
-            }
-          };
-
-          return (
-            <div className={`min-h-screen transition-colors duration-200 ${flashRed ? 'bg-rose-950' : 'bg-transparent'}`}>
-              <ScreenWrapper title={t('l9_title')} onBack={onBack} agentNames={agentNames} t={t} lang={lang} onLangToggle={onLangToggle} onTeacherCode={onTeacherCode}>
-                <div className="space-y-8 max-w-4xl mx-auto w-full">
-                  <InfoCard title={t('l9_infoHead')} t={t}>
-                    <div className="space-y-4">
-                      <p className="break-words">{t('l9_p1')}</p>
-                      <p className="font-bold font-mono text-cyan-400 uppercase text-2xl mt-6 break-words">{t('l9_p2')}</p>
-                      <ul className="space-y-4 bg-slate-900 p-8 rounded-xl border border-cyan-500/30 shadow-inner text-lg">
-                        <li className="break-words">{t('l9_li1')}</li>
-                        <li className="break-words">{t('l9_li2')}</li>
-                        <li className="break-words">{t('l9_li3')}</li>
-                      </ul>
-                    </div>
-                  </InfoCard>
-                  
-                  {!solved ? (
-                    <div className="bg-gradient-to-br from-slate-900 to-slate-950 p-8 rounded-2xl border border-slate-700 relative z-10 shadow-xl">
-                      <SectionTitle icon={Target} color="text-amber-400" title={t('l9_task')}>
-                         <span className="ml-2">{step + 1}/3</span>
-                      </SectionTitle>
-                      
-                      <div className="bg-slate-950 p-8 rounded-xl border border-slate-700 text-slate-100 shadow-inner mb-8 relative">
-                        <div className="absolute top-4 right-4 text-lg font-bold font-mono text-slate-500 border border-slate-700 px-3 py-1 rounded hidden sm:block">{t('l9_inbox')}</div>
-                        <p className="font-normal text-lg border-b border-slate-800 pb-4 mb-6 break-words">{t('l9_from')} <span className="text-rose-400 select-all font-mono ml-2 break-all">{emails[step].sender}</span></p>
-                        <p className="font-bold font-mono text-2xl mb-6 leading-relaxed uppercase break-words">{emails[step].subject}</p>
-                        <p className="font-normal text-slate-200 text-lg mb-8 break-words">"{emails[step].body}"</p>
-                        <button onClick={clickLink} className="w-full p-6 bg-slate-800 hover:bg-slate-700 border border-cyan-500/70 rounded-xl text-cyan-400 font-bold font-mono uppercase flex items-center justify-center gap-4 shadow-md active:scale-95 transition-all touch-manipulation text-lg tracking-widest break-words">
-                          <LinkIcon size={24} className="flex-shrink-0"/> <span className="truncate">{t('l9_link')}</span>
-                        </button>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <Button onClick={() => handleChoice(true)} variant="danger">{t('l9_btnFake')}</Button>
-                        <Button onClick={() => handleChoice(false)} variant="success">{t('l9_btnReal')}</Button>
-                      </div>
-                      
-                      {feedback && (
-                        <div className={`mt-8 p-6 rounded-xl border text-center font-bold font-mono text-2xl uppercase tracking-widest break-words ${isError ? 'bg-gradient-to-r from-rose-900 to-rose-800 border-rose-500 text-rose-300 shadow-lg' : 'bg-gradient-to-r from-emerald-900 to-emerald-800 border-emerald-500 text-emerald-300 shadow-lg'}`}>
-                          {feedback}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-8 text-center">
-                      <div className="p-10 bg-gradient-to-r from-emerald-900 to-emerald-800 border border-emerald-500 rounded-2xl text-emerald-300 font-bold font-mono text-2xl uppercase tracking-widest shadow-xl leading-relaxed break-words">
-                        {t('l9_success')}
-                      </div>
-                      <Button onClick={onComplete} variant="success" icon={Lock}>{t('finish')}</Button>
-                    </div>
-                  )}
-                </div>
-              </ScreenWrapper>
-            </div>
-          );
-        };
-
-        // --- Minigame: System Defender (Akte 10) ---
-        const Minigame = ({ onBack, agentNames, t, lang, onLangToggle, onTeacherCode }) => {
-          const [playing, setPlaying] = useState(false);
-          const [setup, setSetup] = useState(true);
-          const [countdown, setCountdown] = useState(null);
-          const [score, setScore] = useState([0, 0]);
-          const [lives, setLives] = useState([3, 3]);
-          const [items, setItems] = useState([[], []]);
-          const [time, setTime] = useState(0);
-          const [mode, setMode] = useState('single');
-          const [swappedSides, setSwappedSides] = useState(false);
-          const [flash, setFlash] = useState([false, false]);
-
-          const timeRef = useRef(0);
-          const isPausedRef = useRef(false);
-          
-          const p1Name = swappedSides ? agentNames[1] : agentNames[0];
-          const p2Name = swappedSides ? agentNames[0] : agentNames[1];
-
-          // Countdown Logic
-          useEffect(() => {
-            if (countdown === null) return;
-            if (countdown > 0) {
-              const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-              return () => clearTimeout(timer);
-            } else {
-              setPlaying(true);
-              setCountdown(null);
-            }
-          }, [countdown]);
-
-          const triggerMistake = (lane) => {
-            isPausedRef.current = true;
-            setFlash(prev => { let n = [...prev]; n[lane] = true; return n; });
-            setTimeout(() => {
-              isPausedRef.current = false;
-              setFlash([false, false]);
-            }, 400); // Rotes Aufleuchten und kurzes Stoppen
-          };
-
-          // Main Game Loop
-          useEffect(() => {
-            if (!playing) return;
-            
-            const timer = setInterval(() => {
-              if(isPausedRef.current) return;
-              timeRef.current += 1;
-              setTime(timeRef.current);
-            }, 1000);
-
-            const loop = setInterval(() => {
-              if(isPausedRef.current) return;
-
-              setItems(prev => {
-                return prev.map((lane, lIdx) => lane.map(i => ({...i, y: i.y + i.speed})).filter(i => {
-                  if (i.y > 105) {
-                    if (i.isWeak) {
-                       setLives(lv => { let nl = [...lv]; nl[lIdx] -= 1; return nl; });
-                       triggerMistake(lIdx);
-                    }
-                    return false;
-                  }
-                  return true;
-                }));
-              });
-            }, 50);
-
-            return () => { clearInterval(timer); clearInterval(loop); };
-          }, [playing]);
-
-          // Dynamic Spawner
-          useEffect(() => {
-            if (!playing) return;
-            let spawnTimeout;
-
-            const spawn = () => {
-              if(isPausedRef.current) {
-                spawnTimeout = setTimeout(spawn, 100);
-                return;
-              }
-
-              const textsRU_weak = ["123456", "привет", "пароль", "йцукен", "собака", "12345678", "кошка123", "секрет", "лето2023", "админ", "любовь", "мама", "111111", "qwerty", "наташа"];
-              const textsRU_strong = ["Xy9!zL#", "M!ss1on", "K0mP!ex", "4mgehP!", "@Ssi@T", "IeÄ!_TT", "2HbliP._RB", "zXc9$vBn", "qWe4!rTy", "1aS#2dF", "P@ssW0r", "gH5#jKl", "mN8?bVcx", "QW1!erTy", "7uIop@As", "DfG#hJkL"];
-              
-              const textsDE_weak = ["123456", "hallo", "passwort", "qwertz", "bello", "12345678", "hund123", "geheim", "schatz", "liebe", "sommer", "admin", "1234", "asdf", "passwort1", "ich", "baum", "auto"];
-              const textsDE_strong = ["Xy9!zL#", "M!ss1on", "K0mP!ex", "4mgehP!", "@Ssi@T", "IeÄ!_TT", "2HbliP._RB", "wE7?mQx", "1L@kP9$", "zT4!uIo", "P@ssW0r", "gH5#jKl", "mN8?bVcx", "QW1!erTy", "7uIop@As", "DfG#hJkL"];
-              
-              const weakTexts = lang === 'de' ? textsDE_weak : textsRU_weak;
-              const strongTexts = lang === 'de' ? textsDE_strong : textsRU_strong;
-
-              const currentSpeed = 0.8 + (timeRef.current * 0.02); 
-              
-              const generateItem = () => {
-                const isWeak = Math.random() > 0.4;
-                const texts = isWeak ? weakTexts : strongTexts;
-                return { 
-                  id: Math.random(), 
-                  x: Math.random() * 70 + 15, 
-                  y: -10, 
-                  text: texts[Math.floor(Math.random() * texts.length)], 
-                  isWeak, 
-                  speed: currentSpeed 
-                };
-              };
-              
-              setItems(prev => {
-                let n = [...prev];
-                n[0] = [...n[0], generateItem()];
-                if (mode === 'vs') {
-                   n[1] = [...n[1], generateItem()];
-                }
-                return n;
-              });
-
-              const nextDelay = Math.max(600, 2500 - (timeRef.current * 40));
-              spawnTimeout = setTimeout(spawn, nextDelay);
-            };
-
-            spawnTimeout = setTimeout(spawn, 1000);
-            return () => clearTimeout(spawnTimeout);
-          }, [playing, mode, lang]);
-
-          useEffect(() => {
-            if (lives[0] <= 0 || (mode === 'vs' && lives[1] <= 0)) setPlaying(false);
-          }, [lives, mode]);
-
-          const clickItem = (lane, id, isWeak) => {
-            if (isWeak) {
-              setScore(s => { let ns = [...s]; ns[lane] += 10; return ns; });
-            } else {
-              setLives(lv => { let nl = [...lv]; nl[lane] -= 1; return nl; });
-              triggerMistake(lane);
-            }
-            setItems(prev => { let n = [...prev]; n[lane] = n[lane].filter(i => i.id !== id); return n; });
-          };
-
-          const restartGame = () => {
-            setScore([0, 0]);
-            setLives([3, 3]);
-            setItems([[], []]);
-            setTime(0);
-            timeRef.current = 0;
-            isPausedRef.current = false;
-            setFlash([false, false]);
-            setCountdown(3);
-          };
-
-          const goSetup = () => {
-            setScore([0, 0]);
-            setLives([3, 3]);
-            setItems([[], []]);
-            setTime(0);
-            timeRef.current = 0;
-            isPausedRef.current = false;
-            setFlash([false, false]);
-            setSetup(true);
-          };
-
-          const isCamouflage = time >= 30;
-
-          if (setup) {
             return (
-              <ScreenWrapper title={t('l10_title')} onBack={onBack} agentNames={agentNames} t={t} lang={lang} onLangToggle={onLangToggle} onTeacherCode={onTeacherCode}>
-                <div className="text-center space-y-10 max-w-4xl mx-auto py-6 w-full relative">
-                  <Terminal size={80} className="text-cyan-400 mx-auto drop-shadow-lg" />
-                  <h2 className="text-2xl font-bold font-mono text-white uppercase tracking-widest pb-6 border-b border-slate-700 break-words">{t('l10_head')}</h2>
-                  
-                  <div className="bg-gradient-to-br from-slate-900 to-slate-950 p-8 rounded-2xl border border-cyan-500/50 text-left space-y-6 shadow-xl">
-                    <p className="text-lg font-normal text-slate-100 break-words">{t('l10_p1')}</p>
-                    <p className="text-lg font-bold font-mono text-rose-400 uppercase tracking-widest break-words">{t('l10_p2')}</p>
-                    <p className="text-lg font-bold font-mono text-emerald-400 uppercase tracking-widest break-words">{t('l10_p3')}</p>
-                    <div className="bg-slate-950 p-6 rounded-xl border border-slate-700 text-amber-400 font-normal text-lg leading-relaxed break-words">
-                      {t('l10_warn')}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-6 pt-6 relative z-10 max-w-2xl mx-auto w-full">
-                    {!agentNames[1] ? (
-                      <Button onClick={() => { setMode('single'); setSetup(false); setCountdown(3); }} variant="primary" icon={Terminal}>{t('l10_single')}</Button>
-                    ) : (
-                      <>
-                        <Button onClick={() => { setMode('coop'); setSetup(false); setCountdown(3); }} variant="success" icon={Users}>{t('l10_coop')}</Button>
-                        
-                        <div className="bg-gradient-to-br from-slate-900 to-slate-950 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-6">
-                          <Button onClick={() => { setMode('vs'); setSetup(false); setCountdown(3); }} variant="danger" icon={Target}>{t('l10_vs')}</Button>
-                          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between gap-2">
-                            <div className="text-white font-bold font-mono text-lg text-center w-1/3 break-words uppercase">{p1Name}</div>
-                            <button onClick={() => setSwappedSides(!swappedSides)} className="p-3 bg-slate-800 hover:bg-slate-700 border border-cyan-500/50 rounded-xl text-cyan-400 active:scale-95 flex-shrink-0 transition-all touch-manipulation shadow-md" title={t('l10_swapSides')}>
-                              <ArrowRight size={24} className="rotate-180 inline -ml-2" />
-                              <ArrowRight size={24} className="inline -ml-2" />
-                            </button>
-                            <div className="text-white font-bold font-mono text-lg text-center w-1/3 break-words uppercase">{p2Name}</div>
-                          </div>
-                          <p className="text-center text-slate-500 font-bold font-mono text-lg uppercase tracking-widest break-words">{t('l10_swapSides')}</p>
+                <div className="w-full max-w-4xl mx-auto p-4 sm:p-6 pt-6 sm:pt-12 relative z-10 animate-fade-in">
+                    <div className="flex items-center justify-between bg-white p-6 sm:p-8 rounded-3xl border-2 border-indigo-100 mb-8 shadow-md">
+                        <div className="flex items-center gap-4 sm:gap-6">
+                            <div className="p-4 bg-indigo-100 rounded-2xl text-indigo-600">
+                                <Award size={40} />
+                            </div>
+                            <div>
+                                <h2 className="text-3xl sm:text-4xl font-title font-bold text-slate-800">Level-Übersicht</h2>
+                                <p className="text-slate-500 text-lg sm:text-xl mt-1 font-medium">Löst die Missionen nacheinander.</p>
+                            </div>
                         </div>
-                      </>
-                    )}
-                  </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-5 sm:gap-6">
+                        {levels.map(l => {
+                            const isUnlocked = l.id <= unlocked;
+                            const isNext = l.id === unlocked;
+                            let borderCol = isUnlocked ? (isNext ? 'border-indigo-400' : 'border-slate-200') : 'border-slate-100';
+                            let bgCol = isUnlocked ? 'bg-white hover:bg-slate-50 active:bg-slate-100 shadow-md' : 'bg-slate-50 opacity-70';
+                            
+                            return (
+                                <button key={l.id} onClick={() => isUnlocked && onSelect(l.id)} className={`p-5 sm:p-6 rounded-[2rem] border-4 flex items-center gap-5 sm:gap-8 transition-all text-left ${bgCol} ${borderCol} ${isNext ? 'next-level-glow' : ''}`}>
+                                    <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-3xl flex items-center justify-center shrink-0 border-4 ${isUnlocked ? (isNext ? `bg-${l.color}-500 border-${l.color}-300 text-white shadow-lg` : 'bg-slate-100 border-slate-200 text-slate-500') : 'bg-slate-100 border-slate-200 text-slate-400'}`}>
+                                        <l.icon size={isNext ? 40 : 36} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-sm sm:text-base font-bold text-slate-400 uppercase tracking-widest mb-1 sm:mb-2">Level {l.id}</p>
+                                        <h3 className={`text-2xl sm:text-3xl font-bold font-title ${isUnlocked ? 'text-slate-800' : 'text-slate-400'}`}>{l.title}</h3>
+                                    </div>
+                                    {!isUnlocked && <div className="p-4 bg-slate-200 rounded-2xl"><Lock className="text-slate-400" size={32} /></div>}
+                                    {isUnlocked && !isNext && <div className="p-4 bg-emerald-100 rounded-2xl"><CheckCircle className="text-emerald-500" size={32} /></div>}
+                                </button>
+                            )
+                        })}
+                    </div>
                 </div>
-              </ScreenWrapper>
             );
-          }
-
-          return (
-            <div className="fixed inset-0 bg-slate-950 z-[200] flex overflow-hidden select-none touch-none">
-              
-              {/* Grid Background für Minigame */}
-              <div className="absolute inset-0 opacity-40 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(6, 182, 212, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, 0.1) 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
-
-              {countdown !== null && (
-                <div className="absolute inset-0 z-[300] bg-slate-950/80 flex items-center justify-center backdrop-blur-md">
-                  <span className="text-2xl font-bold font-mono text-cyan-400 uppercase tracking-[0.5em] animate-pulse drop-shadow-lg" style={{ transform: 'scale(3)' }}>{countdown > 0 ? countdown : "GO!"}</span>
-                </div>
-              )}
-
-              {[...Array(mode === 'vs' ? 2 : 1)].map((_, laneIdx) => (
-                <div key={laneIdx} className={`relative flex-1 border-slate-800 transition-colors duration-150 ${laneIdx === 0 && mode === 'vs' ? 'border-r' : ''} ${flash[laneIdx] ? 'bg-rose-950/80' : ''}`}>
-                  <div className="absolute top-6 left-6 right-6 z-[210] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pointer-events-none">
-                     <div className="flex flex-col gap-3 min-w-0">
-                        {mode === 'vs' && (
-                          <div className="bg-slate-900/90 px-4 py-2 rounded-xl border border-slate-700 shadow-md inline-block max-w-full">
-                            <span className="text-cyan-400 font-bold font-mono text-lg uppercase tracking-widest truncate block">{laneIdx === 0 ? p1Name : p2Name}</span>
-                          </div>
-                        )}
-                        <div className="bg-slate-900/90 p-4 rounded-xl border border-cyan-500/50 text-cyan-400 font-bold font-mono text-2xl shadow-md inline-block uppercase whitespace-nowrap">
-                          {t('l10_score')} {score[laneIdx]}
-                        </div>
-                     </div>
-                     <div className="flex gap-2 bg-slate-900/90 p-4 rounded-xl border border-rose-500/30 shadow-md self-end sm:self-auto flex-shrink-0">
-                       {[...Array(3)].map((_, i) => <Heart key={i} size={24} className={`${i < lives[laneIdx] ? 'text-rose-500 fill-current drop-shadow-md' : 'text-slate-800'}`} />)}
-                     </div>
-                  </div>
-                  
-                  {time === 30 && (
-                    <div className="absolute top-1/2 left-0 w-full bg-amber-500/90 border-y-2 border-amber-300 text-slate-900 font-bold font-mono py-6 text-center transform -translate-y-1/2 -rotate-12 pointer-events-none text-2xl uppercase tracking-widest z-[220] shadow-xl">
-                       {t('l10_camo')}
-                    </div>
-                  )}
-
-                  <div className="h-full w-full relative">
-                    {items[laneIdx].map(i => (
-                      <button 
-                        key={i.id} 
-                        onPointerDown={() => clickItem(laneIdx, i.id, i.isWeak)}
-                        style={{ left: `${i.x}%`, top: `${i.y}%` }}
-                        className={`absolute p-4 rounded-xl border-2 font-bold font-mono text-lg tracking-wider transform -translate-x-1/2 shadow-md transition-transform active:scale-90 touch-manipulation whitespace-nowrap transform-gpu
-                        ${isCamouflage ? 'bg-slate-800 text-slate-300 border-slate-600' : (i.isWeak ? 'bg-rose-950/80 text-rose-400 border-rose-500/50' : 'bg-emerald-950/80 text-emerald-400 border-emerald-500/50')}`}
-                      >
-                        {i.text}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="absolute bottom-0 w-full h-16 bg-cyan-950/80 border-t border-cyan-500/50 flex items-center justify-center font-bold font-mono text-2xl text-cyan-500 uppercase tracking-widest shadow-inner z-[230] backdrop-blur-md">
-                    {t('l10_server')}
-                  </div>
-                </div>
-              ))}
-
-              {!playing && countdown === null && (
-                <div className="absolute inset-0 bg-slate-950/95 backdrop-blur-xl flex flex-col items-center justify-center z-[250] p-6 text-center overflow-y-auto">
-                  <div className="my-auto w-full max-w-2xl py-8">
-                    <h2 className="text-2xl font-bold font-mono text-rose-500 mb-8 uppercase tracking-[0.3em] drop-shadow-lg border-b border-rose-500/30 pb-4 break-words">{t('l10_gameover')}</h2>
-                    
-                    <div className="bg-gradient-to-br from-slate-900 to-slate-950 p-8 rounded-2xl border border-slate-700 mb-8 w-full shadow-2xl">
-                      {mode === 'vs' ? (
-                        <div className="space-y-8">
-                           <p className="text-cyan-400 font-bold font-mono text-2xl uppercase tracking-widest border-b border-slate-800 pb-4 break-words">{t('l10_endstand')}</p>
-                           <div className="flex justify-between items-center text-2xl font-bold font-mono text-white bg-slate-950 p-4 rounded-xl border border-slate-800 gap-4">
-                             <span className="truncate uppercase min-w-0">{p1Name}</span> <span className="text-cyan-400 flex-shrink-0">{score[0]}</span>
-                           </div>
-                           <div className="flex justify-between items-center text-2xl font-bold font-mono text-white bg-slate-950 p-4 rounded-xl border border-slate-800 gap-4">
-                             <span className="truncate uppercase min-w-0">{p2Name}</span> <span className="text-cyan-400 flex-shrink-0">{score[1]}</span>
-                           </div>
-                           <div className="bg-emerald-950/50 p-6 rounded-xl border border-emerald-500/50 mt-8">
-                             <p className="text-emerald-400 text-2xl font-bold font-mono uppercase tracking-widest drop-shadow-md break-words">
-                               {score[0] === score[1] ? t('l10_tie') : (score[0] > score[1] ? p1Name : p2Name) + ' ' + t('l10_wins')}
-                             </p>
-                           </div>
-                        </div>
-                      ) : (
-                        <div className="py-6 space-y-8">
-                          <p className="text-cyan-400 font-bold font-mono text-2xl uppercase tracking-widest break-words">{t('l10_score')}</p>
-                          <p className="text-2xl font-bold font-mono text-white drop-shadow-lg my-6" style={{ transform: 'scale(3)' }}>{score[0]}</p>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="flex flex-col gap-4 max-w-md mx-auto w-full">
-                       <Button onClick={restartGame} variant="primary" icon={PlayCircle}>{t('l10_playAgain')}</Button>
-                       {agentNames[1] && <Button onClick={goSetup} variant="secondary" icon={Target}>{t('l10_changeMode')}</Button>}
-                       <Button onClick={onBack} variant="secondary" icon={Lock}>{t('finish')}</Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
         };
 
-        // --- App Root & State ---
-        const App = () => {
-          const [view, setView] = useState('welcome');
-          const [agentNames, setAgentNames] = useState(["", ""]);
-          const [maxUnlocked, setMaxUnlocked] = useState(1);
-          const [activeLevel, setActiveLevel] = useState(1);
-          const [levelStates, setLevelStates] = useState({});
-          const [lang, setLang] = useState('de');
+        // --- LEVEL 1: AVATARE & DATENSCHUTZ ---
+        const Level1 = ({ onComplete, isTeacher, skipSignal }) => {
+            const [step, setStep] = useState(0);
+            const [feedback, setFeedback] = useState(null);
 
-          const t = (key) => translations[lang][key] || key;
-          const updateState = (id, s) => setLevelStates(prev => ({ ...prev, [id]: { ...prev[id], ...s } }));
+            // Timer states für die Inline-Aufgaben
+            const [heftWait, setHeftWait] = useState(60);
+            const [checkWait, setCheckWait] = useState(60);
+            const [showHeftError, setShowHeftError] = useState(false);
+            const [showCheckError, setShowCheckError] = useState(false);
 
-          const handleTeacherCode = (code) => {
-            if (code === "download") {
-              const htmlContent = `<!DOCTYPE html>\n<html>\n<head>\n<meta charset="utf-8">\n<title>Mission Sicheres Passwort</title>\n</head>\n<body>\n${document.documentElement.innerHTML}\n</body>\n</html>`;
-              const blob = new Blob([htmlContent], { type: 'text/html' });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = 'Mission_Sicheres_Passwort_Source.html';
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              URL.revokeObjectURL(url);
-              alert("Lernpfad-Code wurde als HTML heruntergeladen!");
-            } else if (code === "KleallesFrei") {
-              setMaxUnlocked(10);
-              alert("ZUTRITT ERTEILT: Alle Akten sind nun frei!");
-            } else if (code === "KleLoesung") {
-              updateState(activeLevel, { 
-                answered: true, 
-                gameWon: true, 
-                solved: true, 
-                abDone: true, 
-                worksheetDone: true,
-                checked: true,
-                analysisDone: true,
-                trickPhase: 'summary'
-              });
-              alert("AKTUELLER SCHRITT ERFOLGREICH ÜBERBRÜCKT.");
-            } else {
-              alert("CODE UNGÜLTIG.");
-            }
-          };
-
-          const handleSelectLevel = (id) => {
-            setActiveLevel(id);
-            setView('level');
-          };
-
-          const renderContent = () => {
-            if (view === 'welcome') return <SetupScreen onStart={(m, n) => { setAgentNames(n); setView('overview'); }} t={t} lang={lang} onLangToggle={() => setLang(l => l === 'de' ? 'ru' : 'de')} onTeacherCode={handleTeacherCode} />;
-            if (view === 'overview') return <OverviewScreen maxUnlocked={maxUnlocked} onSelectLevel={handleSelectLevel} agentNames={agentNames} t={t} lang={lang} onLangToggle={() => setLang(l => l === 'de' ? 'ru' : 'de')} onTeacherCode={handleTeacherCode} />;
+            const [avatarGameIndex, setAvatarGameIndex] = useState(0);
             
-            const id = activeLevel;
-            const props = { 
-              lang, 
-              onLangToggle: () => setLang(l => l === 'de' ? 'ru' : 'de'), 
-              t, 
-              state: levelStates[id] || {}, 
-              updateState: (s) => updateState(id, s), 
-              onBack: () => setView('overview'), 
-              onComplete: () => { setMaxUnlocked(Math.max(maxUnlocked, id + 1)); setView('overview'); }, 
-              agentNames,
-              onTeacherCode: handleTeacherCode
+            const avatarGameItems = [
+                { img: "https://api.dicebear.com/7.x/adventurer/svg?seed=Felix", isAvatar: true },
+                { img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80", isAvatar: false },
+                { img: "https://api.dicebear.com/7.x/bottts/svg?seed=Robot", isAvatar: true },
+                { img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80", isAvatar: false },
+                { img: "https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=400&q=80", isAvatar: true },
+                { img: "https://images.unsplash.com/photo-1510832198440-a52376950479?w=400&q=80", isAvatar: false },
+                { img: "https://api.dicebear.com/7.x/micah/svg?seed=Memoji", isAvatar: true }
+            ];
+
+            const [sortingCards, setSortingCards] = useState([
+                { text: "Dein Lieblingstier", isSafe: true },
+                { text: "Deine genaue Wohnadresse", isSafe: false },
+                { text: "Dein voller echter Name", isSafe: false },
+                { text: "Dein selbstgemachter Avatar", isSafe: true },
+                { text: "Ein echtes Foto von dir vor deinem Haus", isSafe: false },
+                { text: "Deine Lieblingsfarbe", isSafe: true },
+                { text: "Dein Passwort für das Schul-Tablet", isSafe: false },
+                { text: "Dein aktueller Standort (wo du gerade bist)", isSafe: false }
+            ]);
+            const [currentSortIdx, setCurrentSortIdx] = useState(0);
+
+            useEffect(() => {
+                if (skipSignal > 0) {
+                    if (step === 0) setStep(1);
+                    else if (step === 1) setStep(2);
+                    else if (step === 2) setStep(3);
+                    else if (step === 3) setStep(4);
+                    else if (step === 4) setStep(5);
+                    else if (step === 5) setStep(6);
+                    else if (step === 6) { setHeftWait(0); setStep(7); }
+                    else if (step === 7) { setCheckWait(0); onComplete(); }
+                }
+            }, [skipSignal]);
+
+            useEffect(() => {
+                let t;
+                if (step === 6 && heftWait > 0 && !isTeacher) {
+                    t = setInterval(() => setHeftWait(p => p - 1), 1000);
+                } else if (step === 7 && checkWait > 0 && !isTeacher) {
+                    t = setInterval(() => setCheckWait(p => p - 1), 1000);
+                }
+                return () => clearInterval(t);
+            }, [step, heftWait, checkWait, isTeacher]);
+
+
+            const showFeedback = (isOk, text) => {
+                setFeedback({ ok: isOk, msg: text });
+                setTimeout(() => setFeedback(null), 2500);
             };
 
-            switch (id) {
-              case 1: return <Level1 {...props} />;
-              case 2: return <Level2 {...props} />;
-              case 3: return <Level3 {...props} />;
-              case 4: return <Level4 {...props} />;
-              case 5: return <Level5 {...props} />;
-              case 6: return <Level6 {...props} onComplete={() => { setMaxUnlocked(Math.max(maxUnlocked, 7)); setView('overview'); }} />;
-              case 7: return <BonusManager {...props} />;
-              case 8: return <Bonus2FA {...props} />;
-              case 9: return <BonusPhishing {...props} onComplete={() => { setMaxUnlocked(Math.max(maxUnlocked, 10)); setView('cert'); }} />;
-              case 10: return <Minigame onBack={() => setView('overview')} agentNames={agentNames} t={t} lang={lang} onLangToggle={props.onLangToggle} onTeacherCode={handleTeacherCode} />;
-              default: return null;
-            }
-          };
+            const handleAvatarGame = (choseAvatar) => {
+                const item = avatarGameItems[avatarGameIndex];
+                if (choseAvatar === item.isAvatar) {
+                    setFeedback({ ok: true, msg: "Richtig erkannt!" });
+                    setTimeout(() => {
+                        setFeedback(null);
+                        if (avatarGameIndex < avatarGameItems.length - 1) setAvatarGameIndex(i => i + 1);
+                        else setStep(s => s + 1);
+                    }, 1500);
+                } else {
+                    showFeedback(false, "Falsch! Schau genau hin, ob es ein echter Mensch oder eine Computergrafik ist.");
+                }
+            };
 
-          if (view === 'cert') return (
-            <ScreenWrapper title={t('cert_title')} agentNames={agentNames} t={t} lang={lang} onLangToggle={() => setLang(l => l === 'de' ? 'ru' : 'de')}>
-              <div className="w-full px-4 mt-12 relative z-10">
-                <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-cyan-500/50 rounded-2xl p-8 md:p-12 max-w-4xl mx-auto text-center relative shadow-xl">
-                  
-                  <div className="absolute top-[-40px] left-1/2 transform -translate-x-1/2">
-                    <div className="bg-gradient-to-br from-cyan-900 to-cyan-800 p-4 rounded-xl border border-cyan-500/50 shadow-md">
-                      <Award size={48} className="text-cyan-400" />
+            const handleSort = (choseSafe) => {
+                const item = sortingCards[currentSortIdx];
+                if (choseSafe === item.isSafe) {
+                    setFeedback({ ok: true, msg: "Korrekt einsortiert!" });
+                    setTimeout(() => {
+                        setFeedback(null);
+                        if (currentSortIdx < sortingCards.length - 1) setCurrentSortIdx(i => i + 1);
+                        else setStep(s => s + 1);
+                    }, 1500);
+                } else {
+                    showFeedback(false, "Vorsicht! Überlege genau, ob diese Info Fremde im Netz etwas angeht.");
+                }
+            };
+
+            const handleScenario = (goodChoice) => {
+                if (goodChoice) {
+                    showFeedback(true, "Sehr gut! Du weißt, wie man sich im Internet sicher verhält.");
+                    setTimeout(() => { setFeedback(null); setStep(s => s+1); }, 2000);
+                } else {
+                    showFeedback(false, "Achtung Gefahr! Fremden schickt man niemals echte Bilder von sich.");
+                }
+            };
+
+            const handleHeftSubmit = () => {
+                if (heftWait > 0 && !isTeacher) {
+                    setShowHeftError(true);
+                    setTimeout(() => setShowHeftError(false), 3000);
+                } else {
+                    setStep(7);
+                    window.scrollTo(0,0);
+                }
+            };
+
+            const handleCheckSubmit = () => {
+                if (checkWait > 0 && !isTeacher) {
+                    setShowCheckError(true);
+                    setTimeout(() => setShowCheckError(false), 3000);
+                } else {
+                    onComplete(); 
+                }
+            };
+
+            return (
+                <div className="w-full max-w-5xl mx-auto p-4 sm:p-6 relative z-10 animate-fade-in">
+                    
+                    {/* Step 0: Intro */}
+                    {step === 0 && (
+                        <Box title="Identitätsdiebstahl" icon={EyeOff} color="indigo">
+                            <p>Stellt euch vor, ihr spielt ein neues Online-Spiel. Das Spiel fragt euch nach einem Bild für euer Profil, damit andere Spieler euch erkennen können.</p>
+                            
+                            <div className="bg-rose-50 p-6 rounded-3xl border-2 border-rose-200 mt-6 flex flex-col sm:flex-row gap-5 items-start sm:items-center shadow-sm">
+                                <div className="bg-rose-200 p-4 rounded-full text-rose-600 shrink-0"><ShieldAlert size={36} /></div>
+                                <div>
+                                    <p className="text-rose-800 font-bold text-xl mb-1">Achtung: Gefahr für deine Daten!</p>
+                                    <p className="text-rose-700 text-lg">Ein echtes Foto von sich selbst hochzuladen, ist gefährlich. Fremde können das Foto kopieren, damit Unsinn machen oder herausfinden, wer ihr wirklich seid.</p>
+                                </div>
+                            </div>
+
+                            <p className="mt-8 text-xl">Die geniale Lösung dafür heißt: <Highlight>Der Avatar!</Highlight></p>
+                            <p>Ein Avatar ist eine künstliche, erfundene digitale Figur. Sie vertritt dich im Internet, wie eine Spielfigur. Sie kann aussehen wie du, oder ganz verrückt wie ein lila Alien!</p>
+                            
+                            <Button onClick={() => setStep(1)} className="mt-8">Verstanden, weiter!</Button>
+                        </Box>
+                    )}
+
+                    {/* Step 1: Avatar vs Real Game */}
+                    {step === 1 && (
+                        <Box title="Spiel: Avatar oder Echtes Foto?" icon={Camera} color="amber">
+                            <p className="mb-6 font-bold text-amber-800 text-center text-xl">Schaut euch das Bild an und entscheidet gemeinsam:</p>
+                            
+                            <div className="bg-amber-50 p-6 sm:p-8 rounded-[2rem] border-2 border-amber-200 flex flex-col items-center mb-8 shadow-inner">
+                                <img 
+                                    src={avatarGameItems[avatarGameIndex].img} 
+                                    alt="Quiz Bild" 
+                                    className="w-56 h-56 sm:w-64 sm:h-64 object-cover rounded-3xl shadow-lg border-4 border-white mb-6" 
+                                />
+                                <div className="bg-white px-4 py-1.5 rounded-full border border-amber-200 text-sm text-amber-600 uppercase tracking-widest font-bold shadow-sm">
+                                    Bild {avatarGameIndex + 1} von {avatarGameItems.length}
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                                <button onClick={() => handleAvatarGame(true)} className="p-5 sm:p-6 bg-white border-2 border-amber-200 hover:border-amber-400 active:bg-amber-50 rounded-2xl text-xl sm:text-2xl font-bold text-amber-600 transition shadow-sm flex items-center justify-center gap-4 hover:-translate-y-1"><Smile size={32}/> Das ist ein Avatar!</button>
+                                <button onClick={() => handleAvatarGame(false)} className="p-5 sm:p-6 bg-white border-2 border-slate-200 hover:border-slate-400 active:bg-slate-50 rounded-2xl text-xl sm:text-2xl font-bold text-slate-600 transition shadow-sm flex items-center justify-center gap-4 hover:-translate-y-1"><ImageIcon size={32}/> Das ist ein echtes Foto!</button>
+                            </div>
+
+                            {feedback && <div className={`mt-6 p-5 rounded-2xl font-bold text-center text-xl border-2 shadow-sm ${feedback.ok ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-rose-50 text-rose-700 border-rose-300'}`}>{feedback.msg}</div>}
+                        </Box>
+                    )}
+
+                    {/* Step 2: Privacy Rules */}
+                    {step === 2 && (
+                        <Box title="Daten-Bewusstsein entwickeln" icon={Fingerprint} color="emerald">
+                            <p>Ein Avatar ist toll, weil er das Prinzip der <Highlight color="text-emerald-700 bg-emerald-100">Datensparsamkeit</Highlight> erfüllt. Das bedeutet: Wir geben im Internet so wenig wie möglich von uns preis.</p>
+                            <p>Aber der beste Avatar nützt nichts, wenn ihr euren echten Namen oder eure Adresse direkt im Profil daneben schreibt!</p>
+                            <div className="mt-6 font-bold text-emerald-900 bg-emerald-100 p-6 rounded-3xl border-2 border-emerald-200 text-xl shadow-sm text-center">
+                                Wir müssen unterscheiden lernen: Was darf ins Netz und was ist streng geheim?
+                            </div>
+                            <Button onClick={() => setStep(3)} className="mt-8" variant="success">Zur Daten-Sortiermaschine</Button>
+                        </Box>
+                    )}
+
+                    {/* Step 3: Data Sorting Game */}
+                    {step === 3 && (
+                        <Box title="Die Daten-Sortiermaschine" icon={Monitor} color="sky">
+                            <p className="text-center mb-6 font-bold text-slate-700 text-xl">Diese Informationen darfst du im Internet von dir preisgeben.</p>
+                            
+                            <div className="bg-sky-50 p-8 sm:p-10 rounded-[2rem] border-2 border-sky-200 text-center mb-8 shadow-inner relative overflow-hidden">
+                                <p className="text-3xl sm:text-4xl font-bold font-title text-sky-800 leading-tight">{sortingCards[currentSortIdx].text}</p>
+                                <div className="mt-8 inline-block bg-white px-4 py-1.5 rounded-full border border-sky-200 text-sm text-sky-500 uppercase tracking-widest font-bold shadow-sm">
+                                    Karte {currentSortIdx + 1} von {sortingCards.length}
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 sm:gap-6">
+                                <button onClick={() => handleSort(true)} className="p-5 sm:p-8 bg-white hover:bg-emerald-50 active:bg-emerald-100 border-4 border-emerald-300 rounded-3xl text-xl sm:text-2xl font-bold text-emerald-700 transition shadow-sm flex flex-col items-center gap-4 hover:-translate-y-1"><div className="bg-emerald-100 p-4 rounded-full"><ThumbsUp size={40} className="text-emerald-600"/></div> <span className="text-center">Das ist okay</span></button>
+                                <button onClick={() => handleSort(false)} className="p-5 sm:p-8 bg-white hover:bg-rose-50 active:bg-rose-100 border-4 border-rose-300 rounded-3xl text-xl sm:text-2xl font-bold text-rose-700 transition shadow-sm flex flex-col items-center gap-4 hover:-translate-y-1"><div className="bg-rose-100 p-4 rounded-full"><ThumbsDown size={40} className="text-rose-600"/></div> <span className="text-center">Das ist geheim!</span></button>
+                            </div>
+
+                            {feedback && <div className={`mt-6 p-5 rounded-2xl font-bold text-center text-xl border-2 shadow-sm ${feedback.ok ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-rose-50 text-rose-700 border-rose-300'}`}>{feedback.msg}</div>}
+                        </Box>
+                    )}
+
+                    {/* Step 4: Scenario Reflection */}
+                    {step === 4 && (
+                        <Box title="Was würdet ihr tun?" icon={MessageSquare} color="rose">
+                            <div className="bg-slate-50 p-6 sm:p-8 rounded-3xl border-2 border-slate-200 mb-8 shadow-inner">
+                                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Situation:</p>
+                                <p className="text-xl font-medium text-slate-700 leading-snug">Ihr spielt ein cooles Online-Spiel. Jemand im Chat schreibt euch:</p>
+                                <div className="bg-white p-5 sm:p-6 rounded-2xl border-2 border-slate-200 mt-4 shadow-sm">
+                                    <p className="text-slate-800 font-bold italic text-xl">"Hey, dein Drachen-Avatar sieht mega cool aus! Schick mir doch mal ein echtes Bild von dir, damit ich weiß, wie du wirklich aussiehst!"</p>
+                                </div>
+                            </div>
+
+                            <p className="font-bold text-rose-800 mb-4 text-center text-xl">Wie reagiert ihr?</p>
+
+                            <div className="space-y-4">
+                                <button onClick={()=>handleScenario(false)} className="w-full p-6 bg-white border-2 border-slate-200 hover:border-rose-300 active:bg-rose-50 rounded-2xl text-left transition font-medium text-slate-700 text-lg shadow-sm leading-snug hover:-translate-y-1">Ich schicke ein Bild, aber nur ein ganz normales, auf dem ich nett lächle.</button>
+                                <button onClick={()=>handleScenario(true)} className="w-full p-6 bg-white border-2 border-slate-200 hover:border-emerald-300 active:bg-emerald-50 rounded-2xl text-left transition font-medium text-slate-700 text-lg shadow-sm leading-snug hover:-translate-y-1">Ich schicke auf keinen Fall ein echtes Bild! Ich ignoriere die Person oder blockiere sie.</button>
+                            </div>
+                            
+                            {feedback && <div className={`mt-6 p-5 rounded-2xl font-bold text-center text-xl border-2 shadow-sm ${feedback.ok ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-rose-50 text-rose-700 border-rose-300'}`}>{feedback.msg}</div>}
+                        </Box>
+                    )}
+
+                    {/* Step 5: Finished Theory -> Übergang zur Heftaufgabe */}
+                    {step === 5 && (
+                        <div className="text-center animate-fade-in mt-10">
+                            <div className="bg-emerald-50 text-emerald-800 p-8 rounded-[2rem] border-2 border-emerald-300 mb-8 inline-block shadow-md">
+                                <div className="bg-emerald-200 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <CheckCircle size={56} className="text-emerald-600" />
+                                </div>
+                                <h3 className="text-3xl font-bold font-title mb-2">Theorie geschafft!</h3>
+                                <p className="text-[1.15rem] font-medium">Ihr habt ein tolles Datenbewusstsein entwickelt.</p>
+                            </div>
+                            <Button onClick={() => { setStep(6); window.scrollTo(0,0); }} icon={BookOpen} variant="primary" className="max-w-md mx-auto py-5">
+                                Weiter zur Heftaufgabe
+                            </Button>
+                        </div>
+                    )}
+
+                    {/* Step 6: Heftaufgabe (Inline, kein Popup, passend skaliert) */}
+                    {step === 6 && (
+                        <div className="bg-[#fffcee] border-4 border-amber-300 p-6 sm:p-8 rounded-[2rem] shadow-md animate-fade-in mb-6 text-slate-800">
+                            <h3 className="font-title text-2xl sm:text-3xl font-bold mb-4 text-amber-900 flex items-center gap-3 border-b-2 border-amber-200 pb-4">
+                                <div className="bg-amber-200 p-3 rounded-2xl"><Edit3 className="text-amber-700" size={32}/></div>
+                                Aufgabe: Think & Write!
+                            </h3>
+                            
+                            <p className="font-bold text-amber-900 mb-4 text-[1.15rem]">
+                                Schnappt euch euer Heft und notiert die wichtigsten Erkenntnisse in eigenen Worten:
+                            </p>
+                            
+                            <div className="text-[1.15rem] leading-relaxed text-slate-700 pl-4 mb-8">
+                                <ol className="list-decimal pl-4 space-y-3">
+                                    <li>Was ist ein Avatar?</li>
+                                    <li>Warum schützt ein Avatar unsere Privatsphäre im Internet besser als ein echtes Foto?</li>
+                                    <li>Nenne 2 Beispiele für private Daten, die <strong>niemals</strong> ins Netz gehören.</li>
+                                </ol>
+                            </div>
+
+                            <div className="flex flex-col items-center gap-3 bg-amber-50 p-6 rounded-2xl border-2 border-amber-200">
+                                <p className="text-base font-bold text-amber-800 uppercase tracking-widest text-center">
+                                    Habt ihr alles im Heft notiert?
+                                </p>
+                                <Button 
+                                    onClick={handleHeftSubmit} 
+                                    variant={(heftWait > 0 && !isTeacher) ? "secondary" : "amber"} 
+                                    className="max-w-md"
+                                >
+                                    Fertig notiert! (Weiter)
+                                </Button>
+                                
+                                {showHeftError && (
+                                    <p className="text-rose-600 font-bold text-sm mt-1 animate-pulse text-center">
+                                        Bitte bearbeitet die Aufgaben zuerst in Ruhe schriftlich!
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Step 7: Selbstkontrolle (Inline, kein Popup, passend skaliert) */}
+                    {step === 7 && (
+                        <div className="bg-[#f0fdf4] border-4 border-emerald-400 p-6 sm:p-8 rounded-[2rem] shadow-md animate-fade-in mb-6 text-slate-800">
+                            <h3 className="font-title text-2xl sm:text-3xl font-bold mb-4 text-emerald-900 flex items-center gap-3 border-b-2 border-emerald-200 pb-4">
+                                <div className="bg-emerald-200 p-3 rounded-2xl"><CheckCircle className="text-emerald-700" size={32}/></div>
+                                Selbstkontrolle
+                            </h3>
+                            
+                            <p className="text-[1.15rem] font-medium text-slate-700 mb-6 leading-relaxed">
+                                Kontrolliert nun eure Ergebnisse. <strong>Verbessert oder ergänzt eure Notizen im Heft</strong>, falls euch noch etwas fehlt!
+                            </p>
+
+                            <div className="space-y-4 mb-8">
+                                <div className="bg-white p-5 rounded-2xl border-2 border-emerald-100 shadow-sm">
+                                    <p className="font-bold text-slate-800 text-[1.15rem] mb-2">1. Was ist ein Avatar?</p>
+                                    <p className="text-emerald-700 font-medium text-[1.15rem] leading-relaxed"><strong>Lösung:</strong> Eine künstliche, digitale Figur, die uns im Internet vertritt.</p>
+                                </div>
+                                <div className="bg-white p-5 rounded-2xl border-2 border-emerald-100 shadow-sm">
+                                    <p className="font-bold text-slate-800 text-[1.15rem] mb-2">2. Warum schützt ein Avatar unsere Privatsphäre besser?</p>
+                                    <p className="text-emerald-700 font-medium text-[1.15rem] leading-relaxed"><strong>Lösung:</strong> Fremde erkennen nicht, wie wir in Wirklichkeit aussehen. So geben wir keine echten biometrischen Daten von unserem Gesicht preis.</p>
+                                </div>
+                                <div className="bg-white p-5 rounded-2xl border-2 border-emerald-100 shadow-sm">
+                                    <p className="font-bold text-slate-800 text-[1.15rem] mb-2">3. Beispiele für streng private Daten?</p>
+                                    <p className="text-emerald-700 font-medium text-[1.15rem] leading-relaxed"><strong>Lösung:</strong> Genaue Wohnadresse, echter voller Name, Passwörter, Echtzeit-Standort, echte Fotos von uns vor dem Haus.</p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex flex-col items-center gap-3 bg-emerald-100 p-6 rounded-2xl border-2 border-emerald-300">
+                                <p className="text-base font-bold text-emerald-900 uppercase tracking-widest text-center">
+                                    Alles kontrolliert & verbessert?
+                                </p>
+                                <Button 
+                                    onClick={handleCheckSubmit} 
+                                    variant={(checkWait > 0 && !isTeacher) ? "secondary" : "success"} 
+                                    className="max-w-md"
+                                >
+                                    Alles kontrolliert! (Weiter)
+                                </Button>
+                                
+                                {showCheckError && (
+                                    <p className="text-rose-600 font-bold text-sm mt-1 animate-pulse text-center">
+                                        Bitte nehmt euch Zeit, eure Lösungen genau zu kontrollieren!
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // --- LEVEL 2: AVATAR ERSTELLEN ---
+        const Level2 = ({ onComplete, isTeacher, skipSignal }) => {
+            const [waitTimer, setWaitTimer] = useState(60);
+            const [showLinkError, setShowLinkError] = useState(false);
+
+            useEffect(() => {
+                if (skipSignal > 0 || isTeacher) {
+                    setWaitTimer(0);
+                }
+            }, [skipSignal, isTeacher]);
+
+            useEffect(() => {
+                if (waitTimer > 0) {
+                    const t = setInterval(() => setWaitTimer(p => p - 1), 1000);
+                    return () => clearInterval(t);
+                }
+            }, [waitTimer]);
+
+            const handleLinkClick = () => {
+                if (waitTimer > 0 && !isTeacher) {
+                    setShowLinkError(true);
+                    setTimeout(() => setShowLinkError(false), 3000);
+                } else {
+                    window.open('https://bloggerpilot.com/tools/avatar-generator/', '_blank');
+                    onComplete();
+                }
+            };
+
+            return (
+                <div className="w-full max-w-5xl mx-auto p-4 sm:p-6 relative z-10 animate-fade-in">
+                    
+                    {/* TIPP BOXEN */}
+                    <Box title="Wie sieht ein guter Avatar aus?" icon={Lightbulb} color="sky">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-2 mt-2">
+                            <div className="bg-sky-50 p-6 rounded-[2rem] border-2 border-sky-200 shadow-sm flex flex-col items-start transition hover:-translate-y-1">
+                                <div className="bg-sky-200 p-3 rounded-2xl text-sky-700 mb-4"><User size={28}/></div>
+                                <h4 className="font-title font-bold text-xl text-sky-900 mb-2">1. Wiedererkennung</h4>
+                                <p className="text-sky-800 font-medium leading-relaxed">Dein Avatar sollte dir entsprechen. Wähle eine passende Gesichtsform, Haut-, Augen- und Haarfarbe, damit deine Klasse dich erkennt!</p>
+                            </div>
+                            
+                            <div className="bg-emerald-50 p-6 rounded-[2rem] border-2 border-emerald-200 shadow-sm flex flex-col items-start transition hover:-translate-y-1">
+                                <div className="bg-emerald-200 p-3 rounded-2xl text-emerald-700 mb-4"><Shield size={28}/></div>
+                                <h4 className="font-title font-bold text-xl text-emerald-900 mb-2">2. Datenschutz</h4>
+                                <p className="text-emerald-800 font-medium leading-relaxed">Verwende niemals echte Fotos (auch nicht im Hintergrund) und schreibe keine echten Namen oder Wohnorte in das Bild.</p>
+                            </div>
+                            
+                            <div className="bg-amber-50 p-6 rounded-[2rem] border-2 border-amber-200 shadow-sm flex flex-col items-start transition hover:-translate-y-1">
+                                <div className="bg-amber-200 p-3 rounded-2xl text-amber-700 mb-4"><Smile size={28}/></div>
+                                <h4 className="font-title font-bold text-xl text-amber-900 mb-2">3. Teamwork</h4>
+                                <p className="text-amber-800 font-medium leading-relaxed">Oft sehen andere viel besser, wie du in Wirklichkeit aussiehst. Helft euch deshalb unbedingt gegenseitig bei der Erstellung!</p>
+                            </div>
+                        </div>
+                    </Box>
+
+                    {/* AUFGABEN & LINK */}
+                    <Box title="Auf zur Avatar-Erstellung!" icon={PenTool} color="emerald">
+                        <div className="space-y-8">
+
+                            <div className="bg-emerald-100 p-5 sm:p-6 rounded-2xl border-2 border-emerald-300 flex items-start gap-4 shadow-sm">
+                                <div className="bg-emerald-200 p-3 rounded-xl text-emerald-800 shrink-0"><HelpCircle size={28} /></div>
+                                <p className="text-[1.15rem] leading-relaxed text-emerald-900">
+                                    <strong>Wichtige Vorabinformationen:</strong> Lest euch die Hinweise 1 und 2 gut durch! Nach einer kurzen Lesezeit von 60 Sekunden wird der Link zur Erstellung freigeschaltet.
+                                </p>
+                            </div>
+
+                            {/* Hinweis 1 */}
+                            <div className="bg-white p-6 sm:p-8 rounded-[2rem] border-2 border-emerald-200 shadow-sm">
+                                <h4 className="font-bold text-emerald-900 font-title text-2xl mb-4 flex items-center gap-3">
+                                    <div className="bg-emerald-100 p-2 rounded-xl text-emerald-700"><PenTool size={24} /></div>
+                                    Hinweis 1 – Den Avatar erstellen
+                                </h4>
+                                
+                                <p className="text-emerald-800 font-medium text-[1.15rem] leading-relaxed mb-6">
+                                    Klicke zunächst auf den männlichen oder den weiblichen Kopf, je nachdem ob du einen männlichen oder weiblichen Avatar erstellen möchtest.
+                                </p>
+                                
+                                <p className="text-emerald-800 font-medium text-[1.15rem] leading-relaxed">
+                                    Danach erscheint der Generator und du kannst loslegen. Versuche einen Avatar zu erstellen, der möglichst gut deinem aktuellen Aussehen entspricht und durch welchen man dich erkennen kann! Lass dir von deinen Mitschüler*innen helfen, um die richtige Kopf-, Lippen-, Nasen-, Augen- und Ohrenform zu finden – immerhin kannst du dich ja selbst gerade nicht im Spiegel betrachten!
+                                </p>
+                            </div>
+
+                            {/* Hinweis 2 */}
+                            <div className="bg-white p-6 sm:p-8 rounded-[2rem] border-2 border-amber-200 shadow-sm">
+                                <h4 className="font-bold text-amber-900 font-title text-2xl mb-4 flex items-center gap-3">
+                                    <div className="bg-amber-100 p-2 rounded-xl text-amber-700"><Download size={24} /></div>
+                                    Hinweis 2 – Den Avatar herunterladen
+                                </h4>
+                                <p className="text-amber-800 font-medium text-[1.15rem] leading-relaxed mb-6">
+                                    Wenn du mit deinem Avatar fertig bist, kannst du ihn unten rechts herunterladen. Klicke dafür zunächst auf „herunterladen“ und dann jeweils auf „png 200x200“, dann auf „png 400x400“ und dann auf „svg-Vektor Format“. Dadurch hast du deinen Avatar in klein, groß und flexibel gesichert.
+                                </p>
+
+                                {/* Wichtiger Hinweis für Tablet-Nutzer */}
+                                <div className="bg-amber-50 p-5 rounded-2xl border-2 border-amber-300 flex items-start gap-4">
+                                    <div className="bg-amber-200 p-2 rounded-xl text-amber-800 shrink-0 mt-0.5">
+                                        <AlertTriangle size={24} />
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-amber-900 text-[1.1rem] mb-1">Wichtiger Hinweis für Tablets / iPads:</p>
+                                        <p className="text-amber-800 font-medium text-[1.1rem] leading-relaxed">
+                                            Wenn du nicht am PC, sondern am Tablet arbeitest, funktioniert das Speichern etwas anders als oben beschrieben und im Video gezeigt: Tippe auf Herunterladen, tippe dann lange auf das erscheinende Bild und wähle „Bild speichern“ und dann „In Fotos speichern“ aus! Nun ist dein Avatar unter Fotos auf dem Tablet gespeichert.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-sky-50 border-2 border-sky-200 p-8 rounded-[2.5rem] text-center shadow-md mt-10">
+                                <p className="text-xl sm:text-2xl font-bold text-sky-900 mb-6">
+                                    Öffnet den folgenden Link, um nacheinander mit gegenseitiger Hilfe eure Avatar-Bilder zu erstellen:
+                                </p>
+
+                                <button 
+                                    disabled={waitTimer > 0 && !isTeacher}
+                                    onClick={handleLinkClick}
+                                    className={`w-full py-6 px-8 text-white text-center rounded-[2rem] font-bold text-2xl border-b-[6px] shadow-lg transition-transform flex flex-col sm:flex-row items-center justify-center gap-4 ${(waitTimer > 0 && !isTeacher) ? 'bg-slate-400 border-slate-500 cursor-not-allowed' : 'bg-sky-500 hover:bg-sky-600 border-sky-700 active:scale-[0.98] hover:-translate-y-1'}`}
+                                >
+                                    <ExternalLink size={36} /> {waitTimer > 0 && !isTeacher ? `Bitte Hinweise lesen (${waitTimer}s)` : 'Avatar-Generator öffnen'}
+                                </button>
+
+                                {showLinkError && (
+                                    <p className="text-rose-600 font-bold text-lg mt-4 animate-pulse text-center">
+                                        Bitte lies dir zuerst die Hinweise in Ruhe durch!
+                                    </p>
+                                )}
+                            </div>
+
+                        </div>
+                    </Box>
+                </div>
+            );
+        };
+
+        // --- SUCCESS SCREEN ---
+        const FinishScreen = () => (
+            <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 relative z-10 animate-fade-in">
+                <div className="bg-emerald-50 text-emerald-800 p-8 sm:p-12 rounded-[2.5rem] border-4 border-emerald-200 shadow-2xl max-w-3xl mx-auto relative overflow-hidden text-center">
+                    <div className="absolute -top-10 -right-10 text-emerald-200 opacity-50"><Award size={200}/></div>
+                    <div className="relative z-10">
+                        <div className="bg-emerald-200 w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-md">
+                            <Award size={64} className="text-emerald-600" />
+                        </div>
+                        <h3 className="text-4xl sm:text-5xl font-bold font-title mb-6">Geschafft!</h3>
+                        <p className="text-xl sm:text-2xl font-medium leading-relaxed mb-4">
+                            Ihr habt den Lernpfad zur Vorbereitung erfolgreich beendet!
+                        </p>
+                        <p className="text-lg sm:text-xl font-medium text-emerald-700">
+                            Ihr könnt nun in Ruhe im neu geöffneten Tab eure Avatare erstellen und herunterladen. Viel Spaß dabei!
+                        </p>
                     </div>
-                  </div>
-                  
-                  <h2 className="text-2xl font-bold font-mono text-cyan-400 uppercase tracking-widest mt-12 mb-6 pb-4 border-b border-slate-800 break-words">{t('cert_title')}</h2>
-                  <p className="text-slate-400 font-bold font-mono tracking-[0.2em] uppercase mb-8 text-lg break-words">{t('cert_auth')}</p>
-                  
-                  <p className="text-lg font-normal text-slate-200 mb-8 break-words">{t('cert_conf')}</p>
-                  
-                  <div className="flex flex-wrap justify-center gap-4 mb-8">
-                    {agentNames.map(n => n && (
-                      <span key={n} className="text-2xl font-bold font-mono text-emerald-400 bg-emerald-950/50 px-6 py-3 rounded-xl border border-emerald-500/50 uppercase tracking-widest shadow-md break-all">{n}</span>
-                    ))}
-                    {!agentNames[0] && <span className="text-2xl font-bold font-mono text-emerald-400 bg-emerald-950/50 px-6 py-3 rounded-xl border border-emerald-500/50 uppercase tracking-widest shadow-md break-words">{t('cert_unknownAgent')}</span>}
-                  </div>
-                  
-                  <p className="text-lg font-normal text-slate-200 mb-12 max-w-2xl mx-auto leading-relaxed break-words">
-                    {t('cert_text')}
-                  </p>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 border-t border-slate-800 pt-8 mt-8 max-w-2xl mx-auto">
-                      <div>
-                         <div className="font-bold font-mono text-cyan-400 text-2xl mb-2 uppercase tracking-widest break-words">{t('cert_sysadmin')}</div>
-                         <p className="text-lg font-normal text-slate-500 uppercase tracking-widest break-words">{t('cert_examiner')}</p>
-                      </div>
-                      <div>
-                         <div className="font-bold font-mono text-cyan-400 text-2xl mb-2 uppercase tracking-widest break-words">{new Date().toLocaleDateString(lang === 'de' ? 'de-DE' : 'ru-RU')}</div>
-                         <p className="text-lg font-normal text-slate-500 uppercase tracking-widest break-words">{t('cert_date')}</p>
-                      </div>
-                  </div>
                 </div>
-                
-                <div className="mt-12 text-center max-w-md mx-auto">
-                   <Button onClick={() => setView('overview')} variant="secondary" icon={Terminal}>{t('cert_back')}</Button>
-                </div>
-              </div>
-            </ScreenWrapper>
-          );
-
-          return (
-            <div className="bg-slate-950 min-h-screen">
-              <style>{`
-                .next-level-glow {
-                  animation: superPulse 1.5s infinite ease-in-out;
-                  z-index: 10;
-                }
-                @keyframes superPulse {
-                  0%, 100% { box-shadow: 0 0 15px rgba(6,182,212,0.4), inset 0 0 10px rgba(6,182,212,0.2); border-color: rgba(6,182,212, 0.6); transform: scale(1); }
-                  50% { box-shadow: 0 0 40px rgba(6,182,212,1), inset 0 0 20px rgba(6,182,212,0.5); border-color: rgba(6,182,212, 1); transform: scale(1.02); }
-                }
-              `}</style>
-              {renderContent()}
             </div>
-          );
+        );
+
+
+        // --- HAUPT APP ---
+        const App = () => {
+            const [view, setView] = useState('welcome');
+            const [unlocked, setUnlocked] = useState(1);
+            const [activeLevel, setActiveLevel] = useState(1);
+            
+            // Lehrer-Status global
+            const [isTeacher, setIsTeacher] = useState(false);
+            const [teacherModalOpen, setTeacherModalOpen] = useState(false);
+            const [skipSignal, setSkipSignal] = useState(0);
+
+            const handleStart = () => {
+                window.scrollTo(0,0);
+                setView('menu');
+            };
+
+            const completeLevel = () => {
+                window.scrollTo(0,0);
+                if(activeLevel === 1) {
+                    setUnlocked(2);
+                    setView('menu');
+                } else if (activeLevel === 2) {
+                    setView('finish'); 
+                }
+            };
+
+            return (
+                <div className="min-h-screen relative font-sans text-slate-800 flex flex-col">
+                    <Background />
+
+                    <TeacherModal 
+                        isOpen={teacherModalOpen} 
+                        onClose={() => setTeacherModalOpen(false)} 
+                        onGlobalUnlock={() => { setIsTeacher(true); setUnlocked(2); }} 
+                        onSkipCurrent={() => setSkipSignal(s => s + 1)}
+                    />
+                    
+                    {/* Permanenter Header mit Level-Anzeige und Lehrer-Button */}
+                    {view !== 'welcome' && (
+                        <div className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b-2 border-slate-100 px-4 sm:px-8 py-3 shadow-sm flex items-center justify-between">
+                            
+                            {view === 'level' ? (
+                                <button onClick={() => { setView('menu'); window.scrollTo(0,0); }} className="flex items-center gap-2 text-indigo-600 font-bold bg-indigo-50 border-2 border-indigo-100 px-4 py-2.5 rounded-2xl hover:bg-indigo-100 transition active:scale-95 shadow-sm">
+                                    <ChevronLeft size={24} />
+                                    <span className="text-base sm:text-lg">Übersicht</span>
+                                </button>
+                            ) : (
+                                <div className="text-indigo-800 font-bold font-title text-xl tracking-wide">
+                                    Projekt: Avatar
+                                </div>
+                            )}
+                            
+                            <div className="flex items-center gap-3 sm:gap-4">
+                                {view === 'level' && (
+                                    <span className="bg-indigo-100 text-indigo-800 px-4 sm:px-5 py-2 rounded-2xl font-bold font-title uppercase tracking-widest text-sm sm:text-base border-2 border-indigo-200 shadow-sm">
+                                        Level {activeLevel}
+                                    </span>
+                                )}
+                                
+                                <button 
+                                    onClick={() => !isTeacher && setTeacherModalOpen(true)} 
+                                    className={`p-2 rounded-xl border-2 transition shadow-sm flex items-center justify-center hover:scale-105 active:scale-95 ${isTeacher ? 'bg-emerald-100 border-emerald-300 text-emerald-700 cursor-default' : 'bg-white border-slate-200 text-slate-400 hover:text-indigo-500'}`}
+                                    title={isTeacher ? "Lehrermodus aktiv (Alle Sperren aufgehoben)" : "Lehrer-Login öffnen"}
+                                >
+                                    {isTeacher ? <Unlock size={22} /> : <Lock size={22} />}
+                                </button>
+                            </div>
+
+                        </div>
+                    )}
+                    
+                    {view === 'welcome' && <WelcomeScreen onStart={handleStart} />}
+                    {view === 'menu' && <MenuScreen unlocked={unlocked} onSelect={id => { setActiveLevel(id); setView('level'); window.scrollTo(0,0); }} />}
+                    
+                    {view === 'level' && (
+                        <div className="flex-1 py-4 sm:py-8">
+                            {activeLevel === 1 && <Level1 onComplete={completeLevel} isTeacher={isTeacher} skipSignal={skipSignal} />}
+                            {activeLevel === 2 && <Level2 onComplete={completeLevel} isTeacher={isTeacher} skipSignal={skipSignal} />}
+                        </div>
+                    )}
+
+                    {view === 'finish' && <FinishScreen />}
+                </div>
+            );
         };
 
         const root = createRoot(document.getElementById('root'));
